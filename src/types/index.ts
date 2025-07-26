@@ -102,7 +102,7 @@ export interface DateRange {
 }
 
 // Currency types
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CNY' | 'JPY' | 'KRW' | 'CAD' | 'AUD' | 'INR';
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CNY' | 'JPY' | 'KRW' | 'CAD' | 'AUD' | 'INR' | 'TRY';
 
 // Chart data types
 export interface ChartDataPoint {
