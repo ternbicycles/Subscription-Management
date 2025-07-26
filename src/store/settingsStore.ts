@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { ExchangeRateApi } from '@/services/exchangeRateApi'
+import { ExchangeRateApi, type ExchangeRateConfigStatus } from '@/services/exchangeRateApi'
 import { logger } from '@/utils/logger'
 import { BASE_CURRENCY, DEFAULT_EXCHANGE_RATES, type CurrencyType } from '@/config/currency'
 import { apiClient } from '@/utils/api-client'
@@ -28,6 +28,10 @@ interface SettingsState {
   fetchExchangeRates: () => Promise<void>
   updateExchangeRatesFromApi: () => Promise<void>
   
+  // Exchange rate configuration status
+  exchangeRateConfigStatus: ExchangeRateConfigStatus | null
+  fetchExchangeRateConfigStatus: () => Promise<void>
+  
   // Data management
   resetSettings: () => void
   fetchSettings: () => Promise<void>
@@ -44,6 +48,7 @@ export const initialSettings = {
 
   exchangeRates: DEFAULT_EXCHANGE_RATES,
   lastExchangeRateUpdate: null,
+  exchangeRateConfigStatus: null,
   isLoading: false,
   error: null
 }
@@ -68,8 +73,9 @@ export const useSettingsStore = create<SettingsState>()(
           set({ ...settings, isLoading: false })
           // Don't apply theme here - let next-themes handle it
 
-          // 获取汇率数据
+          // 获取汇率数据和配置状态
           get().fetchExchangeRates()
+          get().fetchExchangeRateConfigStatus()
 
         } catch (error: any) {
           // If settings don't exist, the backend might 404, which is okay.
@@ -161,6 +167,16 @@ export const useSettingsStore = create<SettingsState>()(
           logger.error('Error updating exchange rates:', error);
           set({ error: error.message });
           throw error;
+        }
+      },
+
+      fetchExchangeRateConfigStatus: async () => {
+        try {
+          const configStatus = await ExchangeRateApi.getConfigStatus();
+          set({ exchangeRateConfigStatus: configStatus });
+        } catch (error: any) {
+          logger.error('Error fetching exchange rate config status:', error);
+          // 不设置错误状态，因为这不是关键功能
         }
       },
       
