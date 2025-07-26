@@ -185,14 +185,68 @@ class SubscriptionService extends BaseRepository {
      * 批量创建订阅
      */
     async bulkCreateSubscriptions(subscriptionsData) {
-        return this.transaction(async () => {
-            const results = [];
-            for (const subscriptionData of subscriptionsData) {
-                const result = await this.createSubscription(subscriptionData);
-                results.push(result);
-            }
-            return results;
+        // Prepare subscription data for bulk insert
+        const subscriptionRecords = subscriptionsData.map(subscriptionData => {
+            const {
+                name,
+                plan,
+                billing_cycle,
+                next_billing_date,
+                amount,
+                currency,
+                payment_method_id,
+                start_date,
+                status = 'active',
+                category_id,
+                renewal_type = 'manual',
+                notes,
+                website
+            } = subscriptionData;
+
+            // Calculate last_billing_date
+            const last_billing_date = calculateLastBillingDate(
+                next_billing_date, 
+                start_date, 
+                billing_cycle
+            );
+
+            return {
+                name,
+                plan,
+                billing_cycle,
+                next_billing_date,
+                last_billing_date,
+                amount,
+                currency,
+                payment_method_id,
+                start_date,
+                status,
+                category_id,
+                renewal_type,
+                notes,
+                website
+            };
         });
+
+        // Use synchronous bulk insert
+        const results = this.createMany(subscriptionRecords);
+        
+        // Generate payment history for each created subscription (async, outside transaction)
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            const subscriptionData = subscriptionsData[i];
+            
+            if (result.lastInsertRowid) {
+                try {
+                    await this.generatePaymentHistory(result.lastInsertRowid, subscriptionData);
+                    logger.info(`Payment history generated for subscription ${result.lastInsertRowid}`);
+                } catch (error) {
+                    logger.error(`Failed to generate payment history for subscription ${result.lastInsertRowid}:`, error.message);
+                }
+            }
+        }
+
+        return results;
     }
 
     /**
@@ -299,7 +353,7 @@ class SubscriptionService extends BaseRepository {
             SELECT 
                 COUNT(*) as total,
                 COUNT(CASE WHEN status = 'active' THEN 1 END) as active,
-                COUNT(CASE WHEN status = 'inactive' THEN 1 END) as inactive,
+                COUNT(CASE WHEN status = 'trial' THEN 1 END) as trial,
                 COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled,
                 SUM(CASE WHEN status = 'active' THEN amount ELSE 0 END) as total_active_amount,
                 AVG(CASE WHEN status = 'active' THEN amount ELSE NULL END) as avg_active_amount

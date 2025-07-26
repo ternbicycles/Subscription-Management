@@ -720,7 +720,7 @@ const subscriptionValidator = createValidator({
     name: { required: true, type: 'string', maxLength: 100 },
     amount: { required: true, type: 'number' },
     billing_cycle: { required: true, enum: ['monthly', 'yearly', 'quarterly'] },
-    status: { enum: ['active', 'inactive', 'cancelled'] }
+    status: { enum: ['active', 'trial', 'cancelled'] }
 });
 ```
 

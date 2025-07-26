@@ -47,7 +47,7 @@ export const DEFAULT_PAGE_SIZE = 20;
 // Status options
 export const SUBSCRIPTION_STATUS = {
   ACTIVE: 'active',
-  INACTIVE: 'inactive',
+  TRIAL: 'trial',
   CANCELLED: 'cancelled',
 } as const;
 
