@@ -17,6 +17,12 @@ export interface ExchangeRateStatus {
   hasApiKey: boolean;
 }
 
+export interface ExchangeRateConfigStatus {
+  tianApiConfigured: boolean;
+  provider: string;
+  updateFrequency: string;
+}
+
 /**
  * 汇率 API 服务
  */
@@ -65,6 +71,18 @@ export class ExchangeRateApi {
       return await apiClient.get<ExchangeRateStatus>('/exchange-rates/status');
     } catch (error) {
       logger.error('Error fetching scheduler status:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取汇率配置状态
+   */
+  static async getConfigStatus(): Promise<ExchangeRateConfigStatus> {
+    try {
+      return await apiClient.get<ExchangeRateConfigStatus>('/exchange-rates/config-status');
+    } catch (error) {
+      logger.error('Error fetching config status:', error);
       throw error;
     }
   }

@@ -16,6 +16,7 @@ export function ExchangeRateManager() {
     exchangeRates,
     lastExchangeRateUpdate,
     apiKey,
+    exchangeRateConfigStatus,
     fetchExchangeRates,
     updateExchangeRatesFromApi,
     currency,
@@ -129,7 +130,7 @@ export function ExchangeRateManager() {
                 <div className="space-y-1">
                   <p className="text-sm font-medium">API Configuration</p>
                   <div className="flex items-center gap-2">
-                    {apiKey ? (
+                    {exchangeRateConfigStatus?.tianApiConfigured ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-500" />
                         <span className="text-sm text-green-600">Configured</span>
@@ -160,7 +161,7 @@ export function ExchangeRateManager() {
 
 
 
-              {!apiKey && (
+              {!exchangeRateConfigStatus?.tianApiConfigured && (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <AlertCircle className="h-4 w-4 text-yellow-600" />
                   <p className="text-sm text-yellow-800">
@@ -173,7 +174,7 @@ export function ExchangeRateManager() {
             <div className="flex gap-2 mt-4">
               <Button
                 onClick={handleUpdateRates}
-                disabled={isUpdating || !apiKey}
+                disabled={isUpdating || !exchangeRateConfigStatus?.tianApiConfigured || !apiKey}
                 size="sm"
               >
                 {isUpdating ? (

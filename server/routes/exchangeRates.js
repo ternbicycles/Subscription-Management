@@ -20,6 +20,15 @@ function createExchangeRateRoutes(db) {
     // GET exchange rate statistics (Public)
     router.get('/stats', controller.getExchangeRateStats);
 
+    // GET exchange rate configuration status (Public)
+    router.get('/config-status', (req, res) => {
+        res.json({
+            tianApiConfigured: !!process.env.TIANAPI_KEY,
+            provider: 'tianapi.com',
+            updateFrequency: 'Daily (Automatic)'
+        });
+    });
+
     return router;
 }
 
