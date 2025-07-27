@@ -86,6 +86,7 @@ export function ExchangeRateManager() {
                   <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
                   <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
                   <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                  <SelectItem value="TRY">TRY - Turkish Lira</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground mt-1">

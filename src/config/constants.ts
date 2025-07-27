@@ -11,6 +11,7 @@ export const CURRENCY_NAMES: Record<CurrencyCode, string> = {
   CAD: 'Canadian Dollar',
   AUD: 'Australian Dollar',
   INR: 'Indian Rupee',
+  TRY: 'Turkish Lira',
 };
 
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
@@ -23,6 +24,7 @@ export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
   CAD: 'C$',
   AUD: 'A$',
   INR: '₹',
+  TRY: '₺',
 };
 
 // Chart colors
