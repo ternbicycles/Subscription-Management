@@ -140,6 +140,34 @@ npm run dev
 Frontend interface: http://localhost:5173
 Backend service: http://localhost:3001/api
 
+## ⚠️ Notice
+
+**For users who installed the system before July 27, 2025:**
+
+Recent updates include database schema changes that were applied directly to `schema.sql` without proper migrations. If you encounter errors after pulling the latest code, please follow these steps:
+
+### Before Updating
+1. **Export your subscription data** - Use the data export feature in the application to backup all your subscription information
+2. **Backup your database file** - Make a copy of your `database.sqlite` file from the data directory
+
+### If You Encounter Database Errors
+If you experience database-related errors after updating:
+
+1. **Stop the application**
+2. **Backup your current database** (if not already done)
+3. **Reset the database**:
+   ```bash
+   cd server
+   npm run db:reset
+   ```
+4. **Re-import your data** using the import feature in the application
+
+### Data Location
+- **Docker deployment**: Database is located at the path specified in `DATABASE_PATH` environment variable (default: `/app/data/database.sqlite`)
+- **Local development**: Database is located in the `server` directory as `database.sqlite`
+
+Future updates will include proper database migrations to avoid this issue.
+
 ## 🔧 Configuration
 
 ### Environment Variables
