@@ -39,7 +39,7 @@ import {
   BillingCycle
 } from "@/store/subscriptionStore"
 import { useSettingsStore } from "@/store/settingsStore"
-import { exportSubscriptionsToCSV } from "@/lib/subscription-utils"
+import { exportSubscriptionsToCSV, exportSubscriptionsToJSON } from "@/lib/subscription-utils"
 
 import { SubscriptionCard } from "@/components/subscription/SubscriptionCard"
 import { SubscriptionForm } from "@/components/subscription/SubscriptionForm"
@@ -51,7 +51,7 @@ export function SubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
-  const [currentView, setCurrentView] = useState<"all" | "active" | "cancelled">("all")
+  const [currentView, setCurrentView] = useState<"all" | "active" | "trial" | "cancelled">("all")
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedBillingCycles, setSelectedBillingCycles] = useState<BillingCycle[]>([])
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false)
@@ -108,7 +108,8 @@ export function SubscriptionsPage() {
     
     const matchesStatus = 
       currentView === "all" || 
-      (currentView === "active" && sub.status !== "cancelled") ||
+      (currentView === "active" && sub.status === "active") ||
+      (currentView === "trial" && sub.status === "trial") ||
       (currentView === "cancelled" && sub.status === "cancelled")
     
     const matchesCategory =
@@ -235,9 +236,15 @@ export function SubscriptionsPage() {
       return
     }
 
+    const statusLabels = {
+      active: "activated",
+      trial: "set to trial",
+      cancelled: "cancelled"
+    }
+    
     toast({
-      title: status === "active" ? "Subscription activated" : "Subscription cancelled",
-      description: `${subscription.name} has been ${status === "active" ? "activated" : "cancelled"}.`
+      title: `Subscription ${statusLabels[status] || "updated"}`,
+      description: `${subscription.name} has been ${statusLabels[status] || "updated"}.`
     })
   }
 
@@ -300,6 +307,9 @@ export function SubscriptionsPage() {
         title: "Import successful",
         description: `${newSubscriptions.length} subscriptions have been imported.`,
       });
+      
+      // Close the modal after successful import
+      setShowImportModal(false);
     }
 
     // Final fetch to ensure UI is up-to-date
@@ -308,22 +318,23 @@ export function SubscriptionsPage() {
 
   // Handler for exporting subscriptions
   const handleExportSubscriptions = () => {
-    // Generate CSV data
-    const csvData = exportSubscriptionsToCSV(subscriptions)
+    // Generate JSON data
+    const jsonData = exportSubscriptionsToJSON(subscriptions)
     
     // Create a blob and download link
-    const blob = new Blob([csvData], { type: 'text/csv' })
+    const blob = new Blob([jsonData], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `subscriptions-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `subscriptions-${new Date().toISOString().split('T')[0]}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+    URL.revokeObjectURL(url)
     
     toast({
       title: "Export successful",
-      description: "Your subscriptions have been exported to CSV."
+      description: "Your subscriptions have been exported to JSON."
     })
   }
   
@@ -565,6 +576,12 @@ export function SubscriptionsPage() {
             onClick={() => setCurrentView("active")}
           >
             Active
+          </Button>
+          <Button
+            variant={currentView === "trial" ? "default" : "outline"}
+            onClick={() => setCurrentView("trial")}
+          >
+            Trial
           </Button>
           <Button
             variant={currentView === "cancelled" ? "default" : "outline"}

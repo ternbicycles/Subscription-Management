@@ -171,8 +171,8 @@ class SubscriptionManagementController {
             status: 'cancelled'
         });
 
-        const inactiveSubscriptions = this.subscriptionManagementService.count({
-            status: 'inactive'
+        const trialSubscriptions = this.subscriptionManagementService.count({
+            status: 'trial'
         });
 
         // 获取即将到期的订阅（未来7天内）
@@ -205,8 +205,8 @@ class SubscriptionManagementController {
                 activeAutoRenewal,
                 activeManualRenewal,
                 cancelled: cancelledSubscriptions,
-                inactive: inactiveSubscriptions,
-                total: activeAutoRenewal + activeManualRenewal + cancelledSubscriptions + inactiveSubscriptions
+                trial: trialSubscriptions,
+                total: activeAutoRenewal + activeManualRenewal + cancelledSubscriptions + trialSubscriptions
             },
             upcomingActions: {
                 upcomingRenewals,
@@ -216,8 +216,8 @@ class SubscriptionManagementController {
                 autoRenewalRate: activeAutoRenewal + activeManualRenewal > 0 
                     ? Math.round((activeAutoRenewal / (activeAutoRenewal + activeManualRenewal)) * 100) 
                     : 0,
-                activeRate: activeAutoRenewal + activeManualRenewal + cancelledSubscriptions + inactiveSubscriptions > 0
-                    ? Math.round(((activeAutoRenewal + activeManualRenewal) / (activeAutoRenewal + activeManualRenewal + cancelledSubscriptions + inactiveSubscriptions)) * 100)
+                activeRate: activeAutoRenewal + activeManualRenewal + cancelledSubscriptions + trialSubscriptions > 0
+                    ? Math.round(((activeAutoRenewal + activeManualRenewal) / (activeAutoRenewal + activeManualRenewal + cancelledSubscriptions + trialSubscriptions)) * 100)
                     : 0
             },
             lastUpdated: new Date().toISOString()
