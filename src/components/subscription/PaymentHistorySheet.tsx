@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { format } from "date-fns"
 import { Loader2 } from "lucide-react"
 
@@ -72,6 +73,7 @@ export function PaymentHistorySheet({
   subscriptionName,
   onSubmit
 }: PaymentHistorySheetProps) {
+  const { t } = useTranslation(['common', 'validation'])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // State for form data and validation errors
@@ -122,36 +124,36 @@ export function PaymentHistorySheet({
     const newErrors: FormErrors = {}
 
     if (!form.paymentDate) {
-      newErrors.paymentDate = "Payment date is required"
+      newErrors.paymentDate = t('common:paymentDateRequired')
     }
 
     const amountValue = typeof form.amountPaid === 'string' ? parseFloat(form.amountPaid) : form.amountPaid;
     if (!amountValue || isNaN(amountValue) || amountValue <= 0) {
-      newErrors.amountPaid = "Amount must be greater than 0"
+      newErrors.amountPaid = t('common:amountGreaterThanZero')
     }
 
     if (!form.currency) {
-      newErrors.currency = "Currency is required"
+      newErrors.currency = t('common:currencyRequired')
     }
 
     if (!form.billingPeriodStart) {
-      newErrors.billingPeriodStart = "Billing period start is required"
+      newErrors.billingPeriodStart = t('common:billingPeriodStartRequired')
     }
 
     if (!form.billingPeriodEnd) {
-      newErrors.billingPeriodEnd = "Billing period end is required"
+      newErrors.billingPeriodEnd = t('common:billingPeriodEndRequired')
     }
 
     if (form.billingPeriodStart && form.billingPeriodEnd) {
       const startDate = new Date(form.billingPeriodStart)
       const endDate = new Date(form.billingPeriodEnd)
       if (startDate >= endDate) {
-        newErrors.billingPeriodEnd = "End date must be after start date"
+        newErrors.billingPeriodEnd = t('common:endDateAfterStart')
       }
     }
 
     if (!form.status) {
-      newErrors.status = "Status is required"
+      newErrors.status = t('common:statusRequired')
     }
 
     setErrors(newErrors)
@@ -198,7 +200,7 @@ export function PaymentHistorySheet({
       <SheetContent className="w-full sm:w-[400px] md:w-[500px] lg:w-[540px] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>
-            {initialData ? "Edit Payment" : "Add Payment"}
+            {initialData ? t('common:editPayment') : t('common:addPayment')}
           </SheetTitle>
           <SheetDescription>
             {subscriptionName}
@@ -208,11 +210,11 @@ export function PaymentHistorySheet({
         <div className="space-y-4 py-4">
           {/* Payment Date */}
           <div className="space-y-2">
-            <Label htmlFor="paymentDate">Payment Date *</Label>
+            <Label htmlFor="paymentDate">{t('common:paymentDate')} *</Label>
             <DatePicker
               value={form.paymentDate}
               onChange={(date) => handleFieldChange("paymentDate", date || new Date())}
-              placeholder="Select payment date"
+              placeholder={t('common:selectPaymentDate')}
               className={errors.paymentDate ? "border-destructive" : ""}
             />
             {errors.paymentDate && (
@@ -223,7 +225,7 @@ export function PaymentHistorySheet({
           {/* Amount and Currency */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="amountPaid">Amount *</Label>
+              <Label htmlFor="amountPaid">{t('common:amount')} *</Label>
               <Input
                 id="amountPaid"
                 type="number"
@@ -238,7 +240,7 @@ export function PaymentHistorySheet({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency *</Label>
+              <Label htmlFor="currency">{t('common:currency')} *</Label>
               <CurrencySelector
                 value={form.currency}
                 onValueChange={(value) => handleFieldChange("currency", value)}
@@ -253,11 +255,11 @@ export function PaymentHistorySheet({
           {/* Billing Period */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="billingPeriodStart">Billing Period Start *</Label>
+              <Label htmlFor="billingPeriodStart">{t('common:billingPeriodStart')} *</Label>
               <DatePicker
                 value={form.billingPeriodStart}
                 onChange={(date) => handleFieldChange("billingPeriodStart", date || new Date())}
-                placeholder="Select start date"
+                placeholder={t('common:selectStartDate')}
                 className={errors.billingPeriodStart ? "border-destructive" : ""}
               />
               {errors.billingPeriodStart && (
@@ -265,11 +267,11 @@ export function PaymentHistorySheet({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="billingPeriodEnd">Billing Period End *</Label>
+              <Label htmlFor="billingPeriodEnd">{t('common:billingPeriodEnd')} *</Label>
               <DatePicker
                 value={form.billingPeriodEnd}
                 onChange={(date) => handleFieldChange("billingPeriodEnd", date || new Date())}
-                placeholder="Select end date"
+                placeholder={t('common:selectEndDate')}
                 className={errors.billingPeriodEnd ? "border-destructive" : ""}
               />
               {errors.billingPeriodEnd && (
@@ -280,19 +282,19 @@ export function PaymentHistorySheet({
 
           {/* Status */}
           <div className="space-y-2">
-            <Label htmlFor="status">Status *</Label>
+            <Label htmlFor="status">{t('common:status')} *</Label>
             <Select
               value={form.status}
               onValueChange={(value) => handleFieldChange("status", value)}
             >
               <SelectTrigger className={errors.status ? "border-destructive" : ""}>
-                <SelectValue placeholder="Select status" />
+                <SelectValue placeholder={t('common:selectStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="succeeded">Succeeded</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="succeeded">{t('common:succeeded')}</SelectItem>
+                <SelectItem value="failed">{t('common:failed')}</SelectItem>
+                <SelectItem value="refunded">{t('common:refunded')}</SelectItem>
+                <SelectItem value="pending">{t('common:pending')}</SelectItem>
               </SelectContent>
             </Select>
             {errors.status && (
@@ -302,12 +304,12 @@ export function PaymentHistorySheet({
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t('common:notes')}</Label>
             <Textarea
               id="notes"
               value={form.notes}
               onChange={(e) => handleFieldChange("notes", e.target.value)}
-              placeholder="Optional notes about this payment..."
+              placeholder={t('common:optionalNotes')}
               rows={3}
             />
           </div>
@@ -315,7 +317,7 @@ export function PaymentHistorySheet({
 
         <SheetFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button
             type="submit"
@@ -324,7 +326,7 @@ export function PaymentHistorySheet({
             className="w-full sm:w-auto"
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {initialData ? "Update Payment" : "Add Payment"}
+            {initialData ? t('common:updatePayment') : t('common:addPayment')}
           </Button>
         </SheetFooter>
       </SheetContent>

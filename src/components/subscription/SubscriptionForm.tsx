@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { getBaseCurrency } from '@/config/currency'
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -50,6 +51,8 @@ export function SubscriptionForm({
     categories,
     paymentMethods
   } = useSubscriptionStore()
+  
+  const { t } = useTranslation(['common', 'subscription', 'validation'])
 
   // State for form data and validation errors
   const [form, setForm] = useState<SubscriptionFormData>({
@@ -122,7 +125,7 @@ export function SubscriptionForm({
     e.preventDefault()
 
     // Validate form
-    const newErrors = validateForm(form)
+    const newErrors = validateForm(form, t)
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -151,17 +154,17 @@ export function SubscriptionForm({
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{initialData ? "Edit Subscription" : "Add New Subscription"}</DialogTitle>
+            <DialogTitle>{initialData ? t('common:editSubscription') : t('common:addNewSubscription')}</DialogTitle>
             <DialogDescription>
-              {initialData 
-                ? "Update your subscription details below" 
-                : "Enter the details of your subscription below"
+              {initialData
+                ? t('common:updateDetails')
+                : t('common:enterDetails')
               }
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {/* Subscription name */}
-            <FormField label="Name" error={errors.name} required>
+            <FormField label={t('common:name')} error={errors.name} required>
               <Input
                 id="name"
                 name="name"
@@ -172,13 +175,13 @@ export function SubscriptionForm({
             </FormField>
 
             {/* Subscription plan */}
-            <FormField label="Plan" error={errors.plan} required>
+            <FormField label={t('common:plan')} error={errors.plan} required>
               <Input
                 id="plan"
                 name="plan"
                 value={form.plan}
                 onChange={handleChange}
-                placeholder="e.g., Premium, Family, Basic..."
+                placeholder={t('common:planPlaceholder')}
                 className={errors.plan ? "border-destructive" : ""}
               />
             </FormField>
@@ -201,18 +204,18 @@ export function SubscriptionForm({
             />
 
             {/* Billing Cycle */}
-            <FormField label="Billing Cycle" required>
+            <FormField label={t('common:billingCycle')} required>
               <Select 
                 value={form.billingCycle} 
                 onValueChange={(value) => handleSelectChange("billingCycle", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select billing cycle" />
+                  <SelectValue placeholder={t('common:selectBillingCycle')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
+                  <SelectItem value="monthly">{t('common:monthly')}</SelectItem>
+                  <SelectItem value="yearly">{t('common:yearly')}</SelectItem>
+                  <SelectItem value="quarterly">{t('common:quarterly')}</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
@@ -228,7 +231,7 @@ export function SubscriptionForm({
             />
 
             {/* Start Date */}
-            <FormField label="Start Date">
+            <FormField label={t('common:startDate')}>
               <DatePicker
                 value={form.startDate ? new Date(form.startDate) : undefined}
                 onChange={(date) => {
@@ -236,18 +239,18 @@ export function SubscriptionForm({
                     handleFieldChange('startDate', format(date, "yyyy-MM-dd"), setForm, errors, setErrors)
                   }
                 }}
-                placeholder="Pick a date"
+                placeholder={t('common:pickDate')}
               />
             </FormField>
 
             {/* Status */}
-            <FormField label="Status">
+            <FormField label={t('common:status')}>
               <Select
                 value={form.status}
                 onValueChange={(value: "active" | "trial" | "cancelled") => handleSelectChange("status", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t('common:selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
@@ -258,50 +261,50 @@ export function SubscriptionForm({
             </FormField>
 
             {/* Renewal Type */}
-            <FormField label="Renewal Type">
+            <FormField label={t('common:renewalType')}>
               <Select
                 value={form.renewalType}
                 onValueChange={(value: "auto" | "manual") => handleSelectChange("renewalType", value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select renewal type" />
+                  <SelectValue placeholder={t('common:selectRenewalType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">Automatic Renewal</SelectItem>
-                  <SelectItem value="manual">Manual Renewal</SelectItem>
+                  <SelectItem value="auto">{t('common:automaticRenewal')}</SelectItem>
+                  <SelectItem value="manual">{t('common:manualRenewal')}</SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
 
             {/* Website */}
-            <FormField label="Website">
+            <FormField label={t('common:website')}>
               <Input
                 id="website"
                 name="website"
                 value={form.website || ""}
                 onChange={handleChange}
-                placeholder="https://example.com"
+                placeholder={t('common:websitePlaceholder')}
               />
             </FormField>
 
             {/* Notes */}
-            <FormField label="Notes">
+            <FormField label={t('common:notes')}>
               <Textarea
                 id="notes"
                 name="notes"
                 value={form.notes || ""}
                 onChange={handleChange}
-                placeholder="Any additional information..."
+                placeholder={t('common:additionalInformation')}
               />
             </FormField>
           </div>
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common:cancel')}
             </Button>
             <Button type="submit">
-              {initialData ? "Update" : "Add"} Subscription
+              {initialData ? t('common:update') : t('common:add')} {t('common:subscription')}
             </Button>
           </DialogFooter>
         </form>

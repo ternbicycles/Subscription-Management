@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,6 +31,7 @@ interface EditDialogProps {
 }
 
 function EditDialog({ open, onOpenChange, title, currentLabel, onSave }: EditDialogProps) {
+  const { t } = useTranslation(['common', 'settings'])
   const [name, setName] = useState(currentLabel)
 
   const handleSave = () => {
@@ -43,28 +45,28 @@ function EditDialog({ open, onOpenChange, title, currentLabel, onSave }: EditDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit {title}</DialogTitle>
+          <DialogTitle>{t('settings:editOptionTitle', { type: title })}</DialogTitle>
           <DialogDescription>
-            Update the name for this {title.toLowerCase()}.
+            {t('settings:editOptionDesc', { type: title.toLowerCase() })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t('common:name')}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={`Enter ${title.toLowerCase()} name...`}
+              placeholder={t('settings:enterNamePlaceholder', { type: title.toLowerCase() })}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button onClick={handleSave} disabled={!name.trim()}>
-            Save Changes
+            {t('common:save')} {t('common:update')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -80,6 +82,7 @@ interface AddDialogProps {
 }
 
 function AddDialog({ open, onOpenChange, title, onAdd }: AddDialogProps) {
+  const { t } = useTranslation(['common', 'settings'])
   const [name, setName] = useState('')
 
   const handleAdd = () => {
@@ -94,28 +97,28 @@ function AddDialog({ open, onOpenChange, title, onAdd }: AddDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New {title}</DialogTitle>
+          <DialogTitle>{t('settings:addOptionTitle', { type: title })}</DialogTitle>
           <DialogDescription>
-            Create a new {title.toLowerCase()} option.
+            {t('settings:addOptionDesc', { type: title.toLowerCase() })}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="new-name">Name</Label>
+            <Label htmlFor="new-name">{t('common:name')}</Label>
             <Input
               id="new-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={`Enter ${title.toLowerCase()} name...`}
+              placeholder={t('settings:enterNamePlaceholder', { type: title.toLowerCase() })}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common:cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={!name.trim()}>
-            Add {title}
+            {t('settings:addOption', { type: title })}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -155,6 +158,7 @@ function OptionItem({ value, label, onEdit, onDelete, canDelete = true }: Option
 }
 
 export function OptionsManager() {
+  const { t } = useTranslation(['common', 'settings'])
   const { toast } = useToast()
   const {
     categories,
@@ -220,13 +224,13 @@ export function OptionsManager() {
       }
 
       toast({
-        title: "Option updated",
-        description: `${type} option has been updated successfully.`
+        title: t('settings:optionUpdated'),
+        description: t('settings:optionUpdateSuccess', { type: t(`settings:${type}`) })
       })
     } catch {
       toast({
-        title: "Error",
-        description: `Failed to update ${type} option.`,
+        title: t('common:error'),
+        description: t('settings:errorUpdatingOption', { type: t(`settings:${type}`) }),
         variant: "destructive"
       })
     }
@@ -246,13 +250,13 @@ export function OptionsManager() {
       }
 
       toast({
-        title: "Option deleted",
-        description: `${deleteTarget.type} option has been deleted successfully.`
+        title: t('settings:optionDeleted'),
+        description: t('settings:optionDeleteSuccess', { type: t(`settings:${deleteTarget.type}`) })
       })
     } catch {
       toast({
-        title: "Error",
-        description: `Failed to delete ${deleteTarget.type} option.`,
+        title: t('common:error'),
+        description: t('settings:errorDeletingOption', { type: t(`settings:${deleteTarget.type}`) }),
         variant: "destructive"
       })
     }
@@ -261,9 +265,12 @@ export function OptionsManager() {
   }
   
   const deleteConfirmation = useConfirmation({
-    title: deleteTarget?.type === 'category' ? "Delete Category" : "Delete Payment Method",
-    description: deleteTarget ? `Are you sure you want to delete "${deleteTarget.label}"? Any subscriptions using this ${deleteTarget.type} will need to be updated.` : "",
-    confirmText: "Delete",
+    title: deleteTarget?.type === 'category' ? t('settings:deleteCategory') : t('settings:deletePaymentMethod'),
+    description: deleteTarget ? t('settings:deleteConfirmation', {
+      name: deleteTarget.label,
+      type: t(`settings:${deleteTarget.type}`)
+    }) : "",
+    confirmText: t('common:delete'),
     onConfirm: handleDelete,
   })
   
@@ -293,13 +300,13 @@ export function OptionsManager() {
       }
 
       toast({
-        title: "Option added",
-        description: `New ${type} option has been added successfully.`
+        title: t('settings:optionAdded'),
+        description: t('settings:optionAddSuccess', { type: t(`settings:${type}`) })
       })
     } catch {
       toast({
-        title: "Error",
-        description: `Failed to add ${type} option.`,
+        title: t('common:error'),
+        description: t('settings:errorAddingOption', { type: t(`settings:${type}`) }),
         variant: "destructive"
       })
     }
@@ -309,8 +316,8 @@ export function OptionsManager() {
     <div className="space-y-6">
       <Tabs defaultValue="categories" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
+          <TabsTrigger value="categories">{t('settings:categories')}</TabsTrigger>
+          <TabsTrigger value="payment-methods">{t('settings:paymentMethods')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="categories">
@@ -318,14 +325,14 @@ export function OptionsManager() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Categories</CardTitle>
+                  <CardTitle>{t('settings:categories')}</CardTitle>
                   <CardDescription>
-                    Manage subscription categories for better organization.
+                    {t('settings:manageCategoriesDesc')}
                   </CardDescription>
                 </div>
                 <Button onClick={() => handleAdd('category')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Category
+                  {t('settings:addCategory')}
                 </Button>
               </div>
             </CardHeader>
@@ -350,14 +357,14 @@ export function OptionsManager() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Payment Methods</CardTitle>
+                  <CardTitle>{t('settings:paymentMethods')}</CardTitle>
                   <CardDescription>
-                    Manage available payment methods for your subscriptions.
+                    {t('settings:managePaymentMethodsDesc')}
                   </CardDescription>
                 </div>
                 <Button onClick={() => handleAdd('payment')}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Payment Method
+                  {t('settings:addPaymentMethod')}
                 </Button>
               </div>
             </CardHeader>
@@ -384,7 +391,7 @@ export function OptionsManager() {
       <EditDialog
         open={editDialog.open}
         onOpenChange={(open) => setEditDialog(prev => ({ ...prev, open }))}
-        title={editDialog.type === 'category' ? 'Category' : editDialog.type === 'payment' ? 'Payment Method' : 'Plan'}
+        title={editDialog.type === 'category' ? t('settings:category') : editDialog.type === 'payment' ? t('settings:paymentMethod') : t('subscription:plan')}
         currentLabel={editDialog.label}
         onSave={handleSaveEdit}
       />
@@ -393,7 +400,7 @@ export function OptionsManager() {
       <AddDialog
         open={addDialog.open}
         onOpenChange={(open) => setAddDialog(prev => ({ ...prev, open }))}
-        title={addDialog.type === 'category' ? 'Category' : addDialog.type === 'payment' ? 'Payment Method' : 'Plan'}
+        title={addDialog.type === 'category' ? t('settings:category') : addDialog.type === 'payment' ? t('settings:paymentMethod') : t('subscription:plan')}
         onAdd={handleSaveAdd}
       />
       

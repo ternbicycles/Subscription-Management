@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
 import { CurrencySelector } from "@/components/subscription/CurrencySelector"
 import { FormField } from "./FormField"
@@ -11,13 +12,15 @@ interface AmountInputProps {
 }
 
 export function AmountInput({ amount, currency, onAmountChange, onCurrencyChange, error }: AmountInputProps) {
+  const { t } = useTranslation('common')
+
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const numValue = parseFloat(e.target.value)
     onAmountChange(isNaN(numValue) ? 0 : numValue)
   }
 
   return (
-    <FormField label="Amount" error={error} required>
+    <FormField label={t('amount')} error={error} required>
       <div className="grid grid-cols-5 gap-2">
         <div className="col-span-3">
           <Input

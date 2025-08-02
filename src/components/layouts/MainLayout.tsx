@@ -8,6 +8,8 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { ModeToggle } from '@/components/ModeToggle'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
+import { useTranslation } from 'react-i18next'
 
 interface MainLayoutProps {
   children: React.ReactNode
@@ -15,6 +17,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation()
+  const { t } = useTranslation('navigation')
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -30,34 +33,35 @@ export function MainLayout({ children }: MainLayoutProps) {
             <Link to="/">
               <Button variant={location.pathname === '/' ? "default" : "ghost"} size="sm" className="px-2 sm:px-3">
                 <Home className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
+                <span className="hidden sm:inline">{t('dashboard')}</span>
               </Button>
             </Link>
 
             <Link to="/subscriptions">
               <Button variant={location.pathname === '/subscriptions' ? "default" : "ghost"} size="sm" className="px-2 sm:px-3">
                 <CreditCard className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Subscriptions</span>
+                <span className="hidden sm:inline">{t('subscriptions')}</span>
               </Button>
             </Link>
 
             <Link to="/expense-reports">
               <Button variant={location.pathname === '/expense-reports' ? "default" : "ghost"} size="sm" className="px-2 sm:px-3">
                 <BarChart3 className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Reports</span>
+                <span className="hidden sm:inline">{t('reports')}</span>
               </Button>
             </Link>
-
-
 
             <Link to="/settings">
               <Button variant={location.pathname === '/settings' ? "default" : "ghost"} size="sm" className="px-2 sm:px-3">
                 <Settings className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Settings</span>
+                <span className="hidden sm:inline">{t('settings')}</span>
               </Button>
             </Link>
 
-            <ModeToggle />
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <ModeToggle />
+            </div>
           </div>
         </div>
       </header>

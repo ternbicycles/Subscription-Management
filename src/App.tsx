@@ -3,6 +3,7 @@ import { Suspense, lazy } from "react"
 import { Toaster } from "./components/ui/toaster"
 import { ThemeProvider } from "./components/ThemeProvider"
 import { MainLayout } from "./components/layouts/MainLayout"
+import { useTranslation } from "react-i18next"
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import("./pages/HomePage"))
@@ -12,10 +13,12 @@ const ExpenseReportsPage = lazy(() => import("./pages/ExpenseReportsPage").then(
 
 
 function App() {
+  const { t } = useTranslation()
+  
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <MainLayout>
-        <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-64">{t('app.loading')}</div>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/subscriptions" element={<SubscriptionsPage />} />

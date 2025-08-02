@@ -10,6 +10,7 @@ import {
   FileText,
   Globe
 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Subscription, useSubscriptionStore } from "@/store/subscriptionStore"
 import {
@@ -71,7 +72,6 @@ interface ContentComponentProps {
   onOpenChange: (open: boolean) => void
 }
 
-// Moved ContentComponent outside of SubscriptionDetailDialog
 const ContentComponent = ({
   subscription,
   categories,
@@ -80,6 +80,7 @@ const ContentComponent = ({
   onManualRenew,
   onOpenChange
 }: ContentComponentProps) => {
+  const { t } = useTranslation(['subscription', 'common'])
   const {
     id,
     name,
@@ -134,7 +135,7 @@ const ContentComponent = ({
               : ""
           }`}
         >
-          Details
+          {t('common:details')}
         </button>
         <button
           onClick={() => setActiveTab("payments")}
@@ -144,7 +145,7 @@ const ContentComponent = ({
               : ""
           }`}
         >
-          Payment History
+          {t('subscription:paymentHistory')}
         </button>
       </div>
 
@@ -154,7 +155,7 @@ const ContentComponent = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">Subscription Plan</span>
+          <span className="font-medium text-sm">{t('subscription:details.subscriptionPlan')}</span>
         </div>
         <div className="pl-6">
           <p className="text-sm break-words">{plan}</p>
@@ -167,17 +168,17 @@ const ContentComponent = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">Pricing</span>
+          <span className="font-medium text-sm">{t('subscription:details.pricing')}</span>
         </div>
         <div className="pl-6 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Amount:</span>
+            <span className="text-sm">{t('subscription:details.amount')}</span>
             <span className="font-semibold text-sm break-words text-right">
               {formatWithUserCurrency(amount, currency)}
             </span>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Billing Cycle:</span>
+            <span className="text-sm">{t('subscription:details.billingCycle')}</span>
             <Badge variant={getBillingCycleBadgeVariant()} className="text-xs h-5 shrink-0">
               {getBillingCycleLabel(billingCycle)}
             </Badge>
@@ -191,22 +192,22 @@ const ContentComponent = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <CreditCard className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">Payment Details</span>
+          <span className="font-medium text-sm">{t('subscription:details.paymentDetails')}</span>
         </div>
         <div className="pl-6 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Payment Method:</span>
+            <span className="text-sm">{t('subscription:details.paymentMethod')}</span>
             <span className="text-sm break-words text-right">{paymentMethodLabel}</span>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Renewal Type:</span>
+            <span className="text-sm">{t('subscription:details.renewalType')}</span>
             <div className="flex items-center gap-1.5 shrink-0">
               {renewalType === 'auto' ? (
                 <RotateCcw className="h-3 w-3" />
               ) : (
                 <Hand className="h-3 w-3" />
               )}
-              <span className="text-sm">{renewalType === 'auto' ? 'Automatic' : 'Manual'}</span>
+              <span className="text-sm">{renewalType === 'auto' ? t('subscription:details.automatic') : t('subscription:details.manual')}</span>
             </div>
           </div>
         </div>
@@ -218,28 +219,28 @@ const ContentComponent = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">Important Dates</span>
+          <span className="font-medium text-sm">{t('subscription:details.importantDates')}</span>
         </div>
         <div className="pl-6 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Start Date:</span>
+            <span className="text-sm">{t('subscription:details.startDate')}</span>
             <span className="text-sm">{formatDate(startDate)}</span>
           </div>
           {lastBillingDate && (
             <div className="flex items-center justify-between gap-2">
-              <span className="text-sm">Last Payment:</span>
+              <span className="text-sm">{t('subscription:details.lastPayment')}</span>
               <span className="text-sm">{formatDate(lastBillingDate)}</span>
             </div>
           )}
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Next Payment:</span>
+            <span className="text-sm">{t('subscription:details.nextPayment')}</span>
             <div className="flex items-center gap-1.5 shrink-0">
               <span className={`text-sm ${isExpiringSoon ? "text-destructive font-medium" : ""}`}>
                 {formatDate(nextBillingDate)}
               </span>
               {isExpiringSoon && status === 'active' && (
                 <Badge variant={getBadgeVariant()} className="text-xs h-5 shrink-0">
-                  {daysLeft === 0 ? "Today" : `${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+                  {daysLeft === 0 ? t('common:today') : `${daysLeft} ${t('common:days')}`}
                 </Badge>
               )}
             </div>
@@ -253,7 +254,7 @@ const ContentComponent = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Tag className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium text-sm">Category</span>
+          <span className="font-medium text-sm">{t('common:category')}</span>
         </div>
         <div className="pl-6">
           <Badge variant="outline" className="text-xs h-5">{categoryLabel}</Badge>
@@ -267,7 +268,7 @@ const ContentComponent = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">Notes</span>
+              <span className="font-medium text-sm">{t('common:notes')}</span>
             </div>
             <div className="pl-6">
               <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
@@ -285,7 +286,7 @@ const ContentComponent = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium text-sm">Website</span>
+              <span className="font-medium text-sm">{t('common:website')}</span>
             </div>
             <div className="pl-6">
               <Button
@@ -295,7 +296,7 @@ const ContentComponent = ({
                 className="gap-2 text-sm h-9 w-full sm:w-auto"
               >
                 <ExternalLink className="h-4 w-4" />
-                Visit Website
+                {t('subscription:details.visitWebsite')}
               </Button>
             </div>
           </div>
@@ -314,7 +315,7 @@ const ContentComponent = ({
             className="w-full h-10 text-sm"
             size="default"
           >
-            Edit Subscription
+            {t('subscription:details.editSubscription')}
           </Button>
         )}
         {renewalType === 'manual' && status === 'active' && onManualRenew && (
@@ -328,7 +329,7 @@ const ContentComponent = ({
             size="default"
           >
             <RotateCcw className="h-4 w-4" />
-            Renew Now
+            {t('subscription:details.renewNow')}
           </Button>
         )}
       </div>

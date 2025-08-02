@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { 
   Calendar, 
   Plus, 
@@ -56,6 +57,7 @@ import { ImportModal } from "@/components/imports/ImportModal"
 
 export function SubscriptionsPage() {
   const { toast } = useToast()
+  const { t } = useTranslation(['common', 'subscription'])
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
@@ -151,16 +153,16 @@ export function SubscriptionsPage() {
     
     if (error) {
       toast({
-        title: "Error adding subscription",
-        description: getErrorMessage(error) || "Failed to add subscription",
+        title: t('subscription:errorAdd'),
+        description: getErrorMessage(error) || t('subscription:failedAdd'),
         variant: "destructive"
       })
       return
     }
     
     toast({
-      title: "Subscription added",
-      description: `${subscription.name} has been added successfully.`
+      title: t('subscription:added'),
+      description: `${subscription.name} ${t('subscription:addedSuccess')}`
     })
   }
 
@@ -170,17 +172,17 @@ export function SubscriptionsPage() {
     
     if (error) {
       toast({
-        title: "Error updating subscription",
-        description: getErrorMessage(error) || "Failed to update subscription",
+        title: t('subscription:errorUpdate'),
+        description: getErrorMessage(error) || t('subscription:failedUpdate'),
         variant: "destructive"
       })
       return
     }
-    
+
     setEditingSubscription(null)
     toast({
-      title: "Subscription updated",
-      description: `${data.name} has been updated successfully.`
+      title: t('subscription:updated'),
+      description: `${data.name} ${t('subscription:updateSuccess')}`
     })
   }
 
@@ -195,16 +197,16 @@ export function SubscriptionsPage() {
     
     if (error) {
       toast({
-        title: "Error deleting subscription",
-        description: getErrorMessage(error) || "Failed to delete subscription",
+        title: t('subscription:errorDelete'),
+        description: getErrorMessage(error) || t('subscription:failedDelete'),
         variant: "destructive"
       })
       return
     }
-    
+
     toast({
-      title: "Subscription deleted",
-      description: `${deleteTarget.name} has been deleted.`,
+      title: t('subscription:deleted'),
+      description: `${deleteTarget.name} ${t('subscription:deleteSuccess')}`,
       variant: "destructive"
     })
     
@@ -213,9 +215,9 @@ export function SubscriptionsPage() {
   
   // Confirmation dialog hook
   const deleteConfirmation = useConfirmation({
-    title: "Delete Subscription",
-    description: deleteTarget ? `Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.` : "",
-    confirmText: "Delete",
+    title: t('subscription:delete'),
+    description: deleteTarget ? `${t('subscription:confirmDelete')} "${deleteTarget.name}"? ${t('subscription:cannotUndo')}` : "",
+    confirmText: t('common:delete'),
     onConfirm: handleDeleteSubscription,
   })
   
@@ -237,22 +239,17 @@ export function SubscriptionsPage() {
 
     if (error) {
       toast({
-        title: "Error updating status",
-        description: getErrorMessage(error) || "Failed to update status",
+        title: t('subscription:statusUpdateError'),
+        description: getErrorMessage(error) || t('subscription:failedStatusUpdate'),
         variant: "destructive"
       })
       return
     }
 
-    const statusLabels = {
-      active: "activated",
-      trial: "set to trial",
-      cancelled: "cancelled"
-    }
-    
+  
     toast({
-      title: `Subscription ${statusLabels[status] || "updated"}`,
-      description: `${subscription.name} has been ${statusLabels[status] || "updated"}.`
+      title: t('subscription:statusUpdated'),
+      description: `${subscription.name} ${t('subscription:statusUpdateSuccess')}`
     })
   }
 
@@ -265,7 +262,7 @@ export function SubscriptionsPage() {
 
     if (error) {
       toast({
-        title: "Error renewing subscription",
+        title: t('subscription:renewalError'),
         description: getErrorMessage(error),
         variant: "destructive"
       })
@@ -277,8 +274,9 @@ export function SubscriptionsPage() {
       : 'Unknown'
 
     toast({
-      title: "Subscription renewed successfully",
-      description: `${subscription.name} has been renewed. Next billing date: ${newBillingDate}`
+      title: t('subscription:renewed'),
+      description: t(`${subscription.name} has been renewed. 
+        Next billing date: ${newBillingDate}`)
     })
   }
 
@@ -310,14 +308,14 @@ export function SubscriptionsPage() {
 
     if (error) {
       toast({
-        title: "Import failed",
-        description: getErrorMessage(error) || "Failed to import subscriptions",
+        title: t('subscription:importFailed'),
+        description: getErrorMessage(error) || t('subscription:failedImport'),
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Import successful",
-        description: `${newSubscriptions.length} subscriptions have been imported.`,
+        title: t('subscription:importSuccess'),
+        description: t('subscription:subscriptionsImported', { count: newSubscriptions.length }),
       });
       
       // Close the modal after successful import
@@ -345,8 +343,8 @@ export function SubscriptionsPage() {
     URL.revokeObjectURL(url)
     
     toast({
-      title: "Export successful",
-      description: "Your subscriptions have been exported to JSON."
+      title: t('subscription:exportSuccess'),
+      description: t('subscription:exportToJson')
     })
   }
   
@@ -369,7 +367,7 @@ export function SubscriptionsPage() {
       <div className="flex items-center justify-center h-[calc(100vh-16rem)]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg font-medium">Loading subscriptions...</p>
+          <p className="text-lg font-medium">{t('subscription:loadingSubscriptions')}</p>
         </div>
       </div>
     )
@@ -380,9 +378,9 @@ export function SubscriptionsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Subscriptions</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('subscription:title')}</h1>
           <p className="text-muted-foreground">
-            Manage all your subscription services
+            {t('subscription:manageAllServices')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -394,7 +392,7 @@ export function SubscriptionsPage() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Add Subscription</p>
+                <p>{t('subscription:add')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -407,7 +405,7 @@ export function SubscriptionsPage() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Import</p>
+                <p>{t('common:import')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -420,7 +418,7 @@ export function SubscriptionsPage() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Export</p>
+                <p>{t('common:export')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -431,7 +429,7 @@ export function SubscriptionsPage() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-3">
         <div className="flex items-center gap-2 w-full max-w-sm">
           <SearchInput
-            placeholder="Search subscriptions..."
+            placeholder={t('subscription:searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full"
@@ -452,7 +450,7 @@ export function SubscriptionsPage() {
             <PopoverContent className="w-56 p-0" align="end">
               <div className="p-2">
                 <div className="font-medium text-sm flex items-center justify-between">
-                  <span>Filter by Category</span>
+                  <span>{t('subscription:filterByCategory')}</span>
                   {selectedCategories.length > 0 && (
                     <Button
                       variant="ghost"
@@ -460,7 +458,7 @@ export function SubscriptionsPage() {
                       className="h-6 text-xs"
                       onClick={() => setSelectedCategories([])}
                     >
-                      Reset
+                      {t('common:reset')}
                     </Button>
                   )}
                 </div>
@@ -511,7 +509,7 @@ export function SubscriptionsPage() {
             <PopoverContent className="w-56 p-0" align="end">
               <div className="p-2">
                 <div className="font-medium text-sm flex items-center justify-between">
-                  <span>Filter by Billing Cycle</span>
+                  <span>{t('subscription:filterByBillingCycle')}</span>
                   {selectedBillingCycles.length > 0 && (
                     <Button
                       variant="ghost"
@@ -519,7 +517,7 @@ export function SubscriptionsPage() {
                       className="h-6 text-xs"
                       onClick={() => setSelectedBillingCycles([])}
                     >
-                      Reset
+                      {t('common:reset')}
                     </Button>
                   )}
                 </div>
@@ -570,7 +568,7 @@ export function SubscriptionsPage() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Sort by Next Billing Date ({sortOrder === 'asc' ? 'Ascending' : 'Descending'})</p>
+                <p>{t('subscription:sortByNextBilling')} ({sortOrder === 'asc' ? t('common:ascending') : t('common:descending')})</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -581,25 +579,25 @@ export function SubscriptionsPage() {
             variant={currentView === "all" ? "default" : "outline"}
             onClick={() => setCurrentView("all")}
           >
-            All
+            {t('subscription:all')}
           </Button>
           <Button
             variant={currentView === "active" ? "default" : "outline"}
             onClick={() => setCurrentView("active")}
           >
-            Active
+            {t('subscription:active')}
           </Button>
           <Button
             variant={currentView === "trial" ? "default" : "outline"}
             onClick={() => setCurrentView("trial")}
           >
-            Trial
+            {t('subscription:trial')}
           </Button>
           <Button
             variant={currentView === "cancelled" ? "default" : "outline"}
             onClick={() => setCurrentView("cancelled")}
           >
-            Cancelled
+            {t('subscription:cancelled')}
           </Button>
         </div>
       </div>
@@ -709,23 +707,23 @@ export function SubscriptionsPage() {
       ) : sortedSubscriptions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <Calendar className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-          <h3 className="text-lg font-medium mb-1">No subscriptions found</h3>
+          <h3 className="text-lg font-medium mb-1">{t('subscription:noSubscriptionsFound')}</h3>
           <p className="text-muted-foreground mb-4">
             {searchTerm || selectedCategories.length > 0 || selectedBillingCycles.length > 0
-              ? `No results for your current filters. Try changing your search terms or filters.`
+              ? t('subscription:noResultsForFilters')
               : currentView !== "all"
-                ? `You don't have any ${currentView} subscriptions.`
-                : "Get started by adding your first subscription."
+                ? t('subscription:noSubscriptionsOfType', { type: t(`subscription:${currentView}`) })
+                : t('subscription:getStartedMessage')
             }
           </p>
           <div className="flex gap-2">
             <Button onClick={() => setShowAddForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Subscription
+              {t('subscription:add')}
             </Button>
             <Button variant="outline" onClick={() => setShowImportModal(true)}>
               <Upload className="h-4 w-4 mr-2" />
-              Import Subscriptions
+              {t('subscription:importSubscriptions')}
             </Button>
           </div>
         </div>

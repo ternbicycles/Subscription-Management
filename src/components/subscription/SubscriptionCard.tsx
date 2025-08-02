@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import {
   Calendar,
   CreditCard,
@@ -63,6 +64,7 @@ export function SubscriptionCard({
   
   // Get options from the store
   const { categories, paymentMethods } = useSubscriptionStore()
+  const { t } = useTranslation(['common', 'subscription'])
 
   // Get the category and payment method labels using unified utility functions
   const categoryLabel = getCategoryLabel(subscription, categories)
@@ -117,7 +119,7 @@ export function SubscriptionCard({
               onClick={(e) => e.stopPropagation()}
             >
               <MoreVertical className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t('common:options')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -126,7 +128,7 @@ export function SubscriptionCard({
               onEdit(id)
             }}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              {t('common:edit')}
             </DropdownMenuItem>
             {status === 'active' ? (
               <DropdownMenuItem onClick={(e) => {
@@ -134,7 +136,7 @@ export function SubscriptionCard({
                 onStatusChange(id, 'cancelled')
               }}>
                 <Ban className="mr-2 h-4 w-4" />
-                Cancel
+                {t('subscription:cancelled')}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={(e) => {
@@ -142,7 +144,7 @@ export function SubscriptionCard({
                 onStatusChange(id, 'active')
               }}>
                 <Calendar className="mr-2 h-4 w-4" />
-                Reactivate
+                {t('subscription:active')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
@@ -153,7 +155,7 @@ export function SubscriptionCard({
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              {t('common:delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -175,13 +177,13 @@ export function SubscriptionCard({
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <div className="flex items-center gap-2">
-              <span>Next payment:</span>
+              <span>{t('subscription:nextPayment')}:</span>
               <span className={isExpiringSoon ? "text-destructive font-medium" : ""}>
                 {formatDate(nextBillingDate)}
               </span>
               {isExpiringSoon && status === 'active' && (
                 <Badge variant={getBadgeVariant()}>
-                  {daysLeft === 0 ? "Today" : `${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
+                  {daysLeft === 0 ? t('common:today') : `${daysLeft} ${t('common:days')}${daysLeft !== 1 ? 's' : ''}`}
                 </Badge>
               )}
             </div>
@@ -196,7 +198,7 @@ export function SubscriptionCard({
             ) : (
               <Hand className="h-4 w-4" />
             )}
-            <span>{renewalType === 'auto' ? 'Automatic Renewal' : 'Manual Renewal'}</span>
+            <span>{renewalType === 'auto' ? t('common:automaticRenewal') : t('common:manualRenewal')}</span>
           </div>
         </div>
       </CardContent>

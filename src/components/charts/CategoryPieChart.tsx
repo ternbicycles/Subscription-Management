@@ -4,6 +4,7 @@ import { ChartContainer, ChartConfig } from "@/components/ui/chart"
 import { formatCurrencyAmount } from "@/utils/currency"
 import { CategoryExpense } from "@/lib/expense-analytics-api"
 import { useSubscriptionStore } from "@/store/subscriptionStore"
+import { useTranslation } from "react-i18next"
 
 interface CategoryPieChartProps {
   data: CategoryExpense[]
@@ -27,6 +28,7 @@ const COLORS = [
 ]
 
 export function CategoryPieChart({ data, currency, className }: CategoryPieChartProps) {
+  const { t } = useTranslation('reports')
   const { categories } = useSubscriptionStore()
   
   // Get category label
@@ -53,13 +55,13 @@ export function CategoryPieChart({ data, currency, className }: CategoryPieChart
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="text-lg">Spending by Category</CardTitle>
-        <CardDescription>Breakdown of expenses by subscription category (Last 12 months)</CardDescription>
+        <CardTitle className="text-lg">{t('chart.spendingByCategory')}</CardTitle>
+        <CardDescription>{t('chart.breakdownByCategory')}</CardDescription>
       </CardHeader>
       <CardContent className="px-2 sm:px-6">
         {data.length === 0 ? (
           <div className="flex items-center justify-center h-[200px] sm:h-[250px] lg:h-[300px] text-muted-foreground">
-            No category data available
+            {t('chart.noCategoryDataAvailable')}
           </div>
         ) : (
           <>
@@ -93,13 +95,13 @@ export function CategoryPieChart({ data, currency, className }: CategoryPieChart
                                 <div className="font-medium">{data.label}</div>
                                 <div className="grid gap-1 text-sm">
                                   <div className="flex items-center justify-between gap-2">
-                                    <span className="text-muted-foreground">Amount:</span>
+                                    <span className="text-muted-foreground">{t('chart.amount')}:</span>
                                     <span className="font-medium">
                                       {formatCurrencyAmount(data.amount, currency)}
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-between gap-2">
-                                    <span className="text-muted-foreground">Percentage:</span>
+                                    <span className="text-muted-foreground">{t('chart.percentage')}:</span>
                                     <span className="font-medium">{data.percentage.toFixed(1)}%</span>
                                   </div>
                                 </div>

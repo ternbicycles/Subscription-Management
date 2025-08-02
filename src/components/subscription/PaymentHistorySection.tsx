@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { useToast } from "@/hooks/use-toast"
 import { useSettingsStore } from "@/store/settingsStore"
 import { PaymentRecord, PaymentRecordApi, transformPaymentsFromApi } from "@/utils/dataTransform"
@@ -32,6 +33,7 @@ interface PaymentHistorySectionProps {
 }
 
 export function PaymentHistorySection({ subscriptionId, subscriptionName }: PaymentHistorySectionProps) {
+  const { t } = useTranslation(['common', 'subscription'])
   const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,14 +57,14 @@ export function PaymentHistorySection({ subscriptionId, subscriptionName }: Paym
       const errorMessage = err instanceof Error ? err.message : 'Failed to load payment history'
       setError(errorMessage)
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: errorMessage,
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
-  }, [subscriptionId, toast])
+  }, [subscriptionId, toast, t])
 
   // Load payment history when component mounts
   useEffect(() => {

@@ -6,6 +6,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation } from "react-i18next"
 
 // Helper function to safely extract error message
 const getErrorMessage = (error: unknown): string => {
@@ -14,6 +15,7 @@ const getErrorMessage = (error: unknown): string => {
   }
   return String(error)
 }
+
 
 import {
   useSubscriptionStore,
@@ -32,6 +34,7 @@ import { ImportModal } from "@/components/imports/ImportModal"
 
 function HomePage() {
   const { toast } = useToast()
+  const { t } = useTranslation(['dashboard', 'common'])
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null)
   const [showImportModal, setShowImportModal] = useState(false)
   // Get the default view from settings
@@ -97,7 +100,7 @@ function HomePage() {
 
     if (error) {
       toast({
-        title: "Error updating subscription",
+        title: t('subscription:errorUpdate') || "Error updating subscription",
         description: getErrorMessage(error) || "Failed to update subscription",
         variant: "destructive"
       })
@@ -106,8 +109,8 @@ function HomePage() {
 
     setEditingSubscription(null)
     toast({
-      title: "Subscription updated",
-      description: `${data.name} has been updated successfully.`
+      title: t('subscription.updated') || "Subscription updated",
+      description: `${data.name} ${t('subscription.updateSuccess') || "has been updated successfully."}`
     })
   }
 
@@ -128,14 +131,14 @@ function HomePage() {
       }
 
       toast({
-        title: "Data refreshed",
-        description: "Subscription data and renewals have been processed."
+        title: t('common.dataRefreshed') || "Data refreshed",
+        description: t('common.dataRefreshedDesc') || "Subscription data and renewals have been processed."
       })
     } catch (error) {
       console.error('Error refreshing data:', error)
       toast({
-        title: "Refresh failed",
-        description: "Failed to refresh data. Please try again.",
+        title: t('common:refreshFailed') || "Refresh failed",
+        description: t('common:refreshFailedDesc') || "Failed to refresh data. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -151,14 +154,14 @@ function HomePage() {
 
     if (error) {
       toast({
-        title: "Import failed",
-        description: getErrorMessage(error) || "Failed to import subscriptions",
+        title: t('subscription:importFailed') || "Import failed",
+        description: getErrorMessage(error) ||  "Failed to import subscriptions",
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Import successful",
-        description: `${newSubscriptions.length} subscriptions have been imported.`,
+        title: t('subscription:importSuccess') || "Import successful",
+        description: `${newSubscriptions.length} ${t('common:subscriptions')} ${t('common:importSuccess') || "have been imported."}`,
       });
     }
 
@@ -178,7 +181,7 @@ function HomePage() {
       <div className="flex items-center justify-center h-[calc(100vh-16rem)]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg font-medium">Loading subscriptions...</p>
+          <p className="text-lg font-medium">{t('common:loading')} {t('common:subscriptions')}...</p>
         </div>
       </div>
     )
@@ -188,9 +191,9 @@ function HomePage() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('common:dashboard')}</h1>
           <p className="text-muted-foreground">
-            Overview of your subscription expenses and activity
+            {t('common:dashboardDescription')}
           </p>
         </div>
         <Button
@@ -201,7 +204,7 @@ function HomePage() {
           className="flex items-center gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          {isRefreshing ? t('common:refreshing') : t('common:refresh')}
         </Button>
       </div>
 
@@ -209,23 +212,23 @@ function HomePage() {
       <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard
-              title="Monthly Spending"
+              title={t('common:monthlySpending')}
               value={formatCurrencyAmount(monthlySpending, userCurrency)}
-              description="Current month expenses"
+              description={t('common:currentMonthExpenses')}
               icon={Calendar}
               iconColor="text-blue-500"
             />
             <StatCard
-              title="Yearly Spending"
+              title={t('common:yearlySpending')}
               value={formatCurrencyAmount(yearlySpending, userCurrency)}
-              description="Current year total expenses"
+              description={t('common:currentYearTotal')}
               icon={Calendar}
               iconColor="text-purple-500"
             />
             <StatCard
-              title="Active Subscriptions"
+              title={t('common:activeSubscriptions')}
               value={subscriptions.filter(sub => sub.status === "active").length}
-              description="Total services"
+              description={t('common:totalServices')}
               icon={Clock}
               iconColor="text-green-500"
             />

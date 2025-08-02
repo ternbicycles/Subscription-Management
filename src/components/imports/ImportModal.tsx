@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export function ImportModal({
   onOpenChange,
   onImport
 }: ImportModalProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const [step, setStep] = useState<ImportStep>(ImportStep.Upload)
   const [file, setFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
@@ -88,7 +90,7 @@ export function ImportModal({
     if (file.name.endsWith('.csv') || file.name.endsWith('.json')) {
       reader.readAsText(file)
     } else {
-      setErrors(['Unsupported file format. Please upload a CSV or JSON file.'])
+      setErrors([t('unsupportedFileFormat')])
       setIsProcessing(false)
       setStep(ImportStep.Review)
     }
@@ -125,13 +127,13 @@ export function ImportModal({
         return (
           <>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:cancel')}
             </Button>
-            <Button 
+            <Button
               disabled={!file}
               onClick={() => file && setStep(ImportStep.Validate)}
             >
-              Continue
+              {t('next')}
             </Button>
           </>
         )
@@ -140,13 +142,13 @@ export function ImportModal({
         return (
           <>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:cancel')}
             </Button>
-            <Button 
+            <Button
               disabled={isProcessing}
               onClick={validateFile}
             >
-              {isProcessing ? "Validating..." : "Validate File"}
+              {isProcessing ? t('validating') : t('validateFile')}
             </Button>
           </>
         )
@@ -155,13 +157,13 @@ export function ImportModal({
         return (
           <>
             <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              Cancel
+              {t('common:cancel')}
             </Button>
-            <Button 
+            <Button
               disabled={subscriptions.length === 0 || errors.length > 0}
               onClick={completeImport}
             >
-              Import {subscriptions.length} Subscriptions
+              {t('common:import')} {subscriptions.length} {t('common:subscriptions')}
             </Button>
           </>
         )
@@ -179,9 +181,9 @@ export function ImportModal({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Import Subscriptions</DialogTitle>
+          <DialogTitle>{t('importSubscriptions')}</DialogTitle>
           <DialogDescription>
-            Upload a CSV or JSON file to import multiple subscriptions at once.
+            {t('uploadCsvOrJson')}
           </DialogDescription>
         </DialogHeader>
         
@@ -195,16 +197,16 @@ export function ImportModal({
           </div>
           <div className="flex justify-between mt-2 text-xs text-muted-foreground">
             <div className={step >= ImportStep.Upload ? "text-primary font-medium" : ""}>
-              Select file
+              {t('selectFile')}
             </div>
             <div className={step >= ImportStep.Validate ? "text-primary font-medium" : ""}>
-              Validate
+              {t('validate')}
             </div>
             <div className={step >= ImportStep.Review ? "text-primary font-medium" : ""}>
-              Review
+              {t('review')}
             </div>
             <div className={step >= ImportStep.Complete ? "text-primary font-medium" : ""}>
-              Complete
+              {t('complete')}
             </div>
           </div>
         </div>

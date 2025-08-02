@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSubscriptionStore } from "@/store/subscriptionStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import {
@@ -30,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export function ExpenseReportsPage() {
   const { fetchSubscriptions, fetchCategories } = useSubscriptionStore()
+  const { t } = useTranslation(['reports', 'common'])
   const { currency: userCurrency, fetchSettings } = useSettingsStore()
   
   // Filter states
@@ -340,9 +342,9 @@ export function ExpenseReportsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Expense Reports</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Comprehensive analysis of your subscription expenses
+            {t('description')}
           </p>
         </div>
       </div>
@@ -352,7 +354,7 @@ export function ExpenseReportsPage() {
         <div>
           {isLoadingExpenseInfo ? (
             <div>
-              <p className="text-sm text-muted-foreground mb-4">Loading expense overview...</p>
+              <p className="text-sm text-muted-foreground mb-4">{t('loadingExpenseOverview')}</p>
               <ExpenseInfoCards
                 monthlyData={[]}
                 quarterlyData={[]}
@@ -365,7 +367,7 @@ export function ExpenseReportsPage() {
             <Card>
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
-                  <p className="text-sm text-destructive mb-2">Failed to load expense overview</p>
+                  <p className="text-sm text-destructive mb-2">{t('failedToLoadExpenseOverview')}</p>
                   <p className="text-xs text-muted-foreground">{expenseInfoError}</p>
                 </div>
               </CardContent>
@@ -391,7 +393,7 @@ export function ExpenseReportsPage() {
           <CardContent className="flex items-center justify-center h-32">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Loading expense data...</p>
+              <p className="text-sm text-muted-foreground">{t('loadingExpenseData')}</p>
             </div>
           </CardContent>
         </Card>
@@ -401,7 +403,7 @@ export function ExpenseReportsPage() {
         <Card>
           <CardContent className="flex items-center justify-center h-32">
             <div className="text-center">
-              <p className="text-sm text-destructive mb-2">Failed to load expense data</p>
+              <p className="text-sm text-destructive mb-2">{t('failedToLoadExpenseData')}</p>
               <p className="text-xs text-muted-foreground">{expenseError}</p>
             </div>
           </CardContent>
@@ -413,8 +415,8 @@ export function ExpenseReportsPage() {
         <div className="space-y-4">
           <Tabs defaultValue="monthly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="yearly">Yearly</TabsTrigger>
+              <TabsTrigger value="monthly">{t('monthly')}</TabsTrigger>
+              <TabsTrigger value="yearly">{t('yearly')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="monthly" className="space-y-4">
@@ -429,7 +431,7 @@ export function ExpenseReportsPage() {
                     <CardContent className="flex items-center justify-center h-[400px]">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-muted-foreground">Loading category data...</p>
+                        <p className="text-sm text-muted-foreground">{t('loadingCategoryData')}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -437,7 +439,7 @@ export function ExpenseReportsPage() {
                   <Card>
                     <CardContent className="flex items-center justify-center h-[400px]">
                       <div className="text-center text-destructive">
-                        <p className="font-medium">Failed to load category data</p>
+                        <p className="font-medium">{t('failedToLoadCategoryData')}</p>
                         <p className="text-sm text-muted-foreground mt-1">{categoryExpenseError}</p>
                       </div>
                     </CardContent>
@@ -456,13 +458,13 @@ export function ExpenseReportsPage() {
                 <div className="flex items-center justify-center h-32">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                    <p className="text-sm text-muted-foreground">Loading yearly data...</p>
+                    <p className="text-sm text-muted-foreground">{t('loadingYearlyData')}</p>
                   </div>
                 </div>
               ) : yearlyExpenseError ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="text-center">
-                    <p className="text-sm text-destructive mb-2">Failed to load yearly data</p>
+                    <p className="text-sm text-destructive mb-2">{t('failedToLoadYearlyData')}</p>
                     <p className="text-xs text-muted-foreground">{yearlyExpenseError}</p>
                   </div>
                 </div>
@@ -478,7 +480,7 @@ export function ExpenseReportsPage() {
                       <CardContent className="flex items-center justify-center h-[400px]">
                         <div className="text-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                          <p className="text-sm text-muted-foreground">Loading yearly category data...</p>
+                          <p className="text-sm text-muted-foreground">{t('loadingYearlyCategoryData')}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -486,7 +488,7 @@ export function ExpenseReportsPage() {
                     <Card>
                       <CardContent className="flex items-center justify-center h-[400px]">
                         <div className="text-center text-destructive">
-                          <p className="font-medium">Failed to load yearly category data</p>
+                          <p className="font-medium">{t('failedToLoadYearlyCategoryData')}</p>
                           <p className="text-sm text-muted-foreground mt-1">{yearlyCategoryExpenseError}</p>
                         </div>
                       </CardContent>

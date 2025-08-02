@@ -6,6 +6,7 @@ import { formatCurrencyAmount } from "@/utils/currency"
 import { MonthlyExpense } from "@/lib/expense-analytics-api"
 import { LineChart as LineChartIcon, BarChart3 } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 interface ExpenseTrendChartProps {
   data: MonthlyExpense[]
@@ -58,6 +59,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function ExpenseTrendChart({ data, categoryData, currency, className }: ExpenseTrendChartProps) {
+  const { t } = useTranslation('reports')
   const [chartType, setChartType] = useState<'line' | 'groupedBar'>('line')
   
   // 获取所有类别名称（用于分组柱状图）
@@ -71,10 +73,6 @@ export function ExpenseTrendChart({ data, categoryData, currency, className }: E
     const colorKeys = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5']
     return `hsl(var(--${colorKeys[index % colorKeys.length]}))`
   }
-
-
-  
-
 
   const renderChart = () => {
     if (chartType === 'line') {
@@ -115,13 +113,13 @@ export function ExpenseTrendChart({ data, categoryData, currency, className }: E
                       <div className="font-medium">{label}</div>
                       <div className="grid gap-1 text-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">Amount:</span>
+                          <span className="text-muted-foreground">{t('chart.amount')}:</span>
                           <span className="font-medium">
                             {formatCurrencyAmount(data.amount, currency)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">Subscriptions:</span>
+                          <span className="text-muted-foreground">{t('chart.subscriptions')}:</span>
                           <span className="font-medium">{data.subscriptionCount}</span>
                         </div>
                       </div>
@@ -195,7 +193,7 @@ export function ExpenseTrendChart({ data, categoryData, currency, className }: E
                         ))}
                         <div className="border-t pt-1 mt-1">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-muted-foreground font-medium">Total:</span>
+                            <span className="text-muted-foreground font-medium">{t('chart.total')}:</span>
                             <span className="font-semibold">
                               {formatCurrencyAmount(
                                 payload.reduce((sum, entry) => sum + (entry.value as number), 0), 
@@ -230,11 +228,11 @@ export function ExpenseTrendChart({ data, categoryData, currency, className }: E
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-lg">Expense Trends</CardTitle>
+          <CardTitle className="text-lg">{t('chart.expenseTrends')}</CardTitle>
           <CardDescription>
             {chartType === 'line' 
-              ? 'Monthly spending over time (Last 12 months)'
-              : 'Monthly spending by category (Last 12 months)'
+              ? t('chart.monthlySpendingOverTime')
+              : t('chart.monthlySpendingByCategory')
             }
           </CardDescription>
         </div>
@@ -265,8 +263,8 @@ export function ExpenseTrendChart({ data, categoryData, currency, className }: E
         {(chartType === 'line' ? data.length === 0 : !categoryData || categoryData.length === 0) ? (
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
             {chartType === 'line' 
-              ? 'No expense data available'
-              : 'No category data available'
+              ? t('chart.noExpenseDataAvailable')
+              : t('chart.noCategoryDataAvailable')
             }
           </div>
         ) : (

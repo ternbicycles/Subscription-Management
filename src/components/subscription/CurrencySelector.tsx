@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -31,6 +32,7 @@ export function CurrencySelector({
   className
 }: CurrencySelectorProps) {
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation('common')
   const { exchangeRates, fetchExchangeRates } = useSettingsStore()
 
   // Fetch exchange rates on component mount
@@ -71,8 +73,8 @@ export function CurrencySelector({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command>
-          <CommandInput placeholder="Search currency..." />
-          <CommandEmpty>No currency found.</CommandEmpty>
+          <CommandInput placeholder={t('common:searchCurrency')} />
+          <CommandEmpty>{t('common:noCurrencyFound')}</CommandEmpty>
           <CommandList className="max-h-60">
             <CommandGroup>
               {currencies.map((currency) => (

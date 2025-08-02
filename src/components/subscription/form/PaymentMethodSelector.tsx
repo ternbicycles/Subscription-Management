@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Check, ChevronsUpDown, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,6 +28,7 @@ interface PaymentMethodSelectorProps {
 
 export function PaymentMethodSelector({ value, onChange, paymentMethods, error }: PaymentMethodSelectorProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
 
   const handleSelect = (selectedValue: string) => {
@@ -38,7 +40,7 @@ export function PaymentMethodSelector({ value, onChange, paymentMethods, error }
   }
 
   return (
-    <FormField label="Payment Method" error={error} required>
+    <FormField label={t('common:paymentMethod')} error={error} required>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -51,20 +53,20 @@ export function PaymentMethodSelector({ value, onChange, paymentMethods, error }
             )}
           >
             {value
-              ? paymentMethods.find(method => method.id === value)?.label || "Unknown payment method"
-              : "Select payment method..."
+              ? paymentMethods.find(method => method.id === value)?.label || t('common:unknownPaymentMethod')
+              : t('common:selectPaymentMethod')
             }
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
           <Command>
-            <CommandInput placeholder="Search payment method..." />
-            <CommandEmpty>No payment method found.</CommandEmpty>
+            <CommandInput placeholder={t('common:searchPaymentMethod')} />
+            <CommandEmpty>{t('common:noPaymentMethodFound')}</CommandEmpty>
             <CommandList className="max-h-[300px] overflow-auto">
               <CommandGroup>
                 <div className="flex items-center justify-between px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                  <span>Payment Methods</span>
+                  <span>{t('common:paymentMethods')}</span>
                   <Settings
                     className="h-4 w-4 cursor-pointer hover:text-foreground"
                     onClick={(e) => {
