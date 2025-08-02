@@ -115,6 +115,7 @@
   "selectEndDate": "Select end date",
   "selectStatus": "Select status",
   "amountGreaterThanZero": "Amount must be greater than 0",
+  "amountNonNegative": "Amount must be non-negative (0 or greater)",
   "succeeded": "Succeeded",
   "failed": "Failed",
   "refunded": "Refunded",

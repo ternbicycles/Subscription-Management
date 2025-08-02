@@ -116,6 +116,7 @@
   "selectEndDate": "选择结束日期",
   "selectStatus": "选择状态",
   "amountGreaterThanZero": "金额必须大于0",
+  "amountNonNegative": "金额必须为非负数（0或更大）",
   "succeeded": "成功",
   "failed": "失败",
   "refunded": "已退款",

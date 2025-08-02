@@ -7,7 +7,7 @@ export const validateForm = (form: SubscriptionFormData, t: (key: string) => str
   if (!form.plan) errors.plan = t('validation:required')
   if (!form.categoryId || form.categoryId === 0) errors.categoryId = t('validation:required')
   if (!form.paymentMethodId || form.paymentMethodId === 0) errors.paymentMethodId = t('validation:required')
-  if (form.amount <= 0) errors.amount = t('validation:positiveNumber')
+  if (form.amount < 0) errors.amount = t('validation:nonNegativeNumber')
 
   return errors
 }

@@ -128,8 +128,8 @@ export function PaymentHistorySheet({
     }
 
     const amountValue = typeof form.amountPaid === 'string' ? parseFloat(form.amountPaid) : form.amountPaid;
-    if (!amountValue || isNaN(amountValue) || amountValue <= 0) {
-      newErrors.amountPaid = t('common:amountGreaterThanZero')
+    if (isNaN(amountValue) || amountValue < 0) {
+      newErrors.amountPaid = t('common:amountNonNegative')
     }
 
     if (!form.currency) {
