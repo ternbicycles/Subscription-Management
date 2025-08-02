@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Calendar,
   Clock,
@@ -6,6 +6,14 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+
+// Helper function to safely extract error message
+const getErrorMessage = (error: unknown): string => {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message)
+  }
+  return String(error)
+}
 
 import {
   useSubscriptionStore,
@@ -49,14 +57,14 @@ function HomePage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Initialize subscriptions without auto-renewals
-  useEffect(() => {
-    const initialize = async () => {
-      await fetchSettings()
-      await initializeData()
-    }
+  const initialize = useCallback(async () => {
+    await fetchSettings()
+    await initializeData()
+  }, [fetchSettings, initializeData])
 
+  useEffect(() => {
     initialize()
-  }, []) // Remove dependencies to prevent infinite re-renders
+  }, [initialize])
 
   // Load spending data from API
   useEffect(() => {
@@ -90,7 +98,7 @@ function HomePage() {
     if (error) {
       toast({
         title: "Error updating subscription",
-        description: error.message || "Failed to update subscription",
+        description: getErrorMessage(error) || "Failed to update subscription",
         variant: "destructive"
       })
       return
@@ -144,7 +152,7 @@ function HomePage() {
     if (error) {
       toast({
         title: "Import failed",
-        description: error.message || "Failed to import subscriptions",
+        description: getErrorMessage(error) || "Failed to import subscriptions",
         variant: "destructive",
       });
     } else {

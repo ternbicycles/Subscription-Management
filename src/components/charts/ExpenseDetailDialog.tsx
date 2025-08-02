@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 import { formatCurrencyAmount } from "@/utils/currency"
-import { transformPaymentsFromApi, type PaymentRecord } from '@/utils/dataTransform'
+import { transformPaymentsFromApi, type PaymentRecord, type PaymentRecordApi } from '@/utils/dataTransform'
 import { apiClient } from '@/utils/api-client'
 import { formatDateDisplay } from '@/utils/date'
 import {
@@ -26,26 +26,8 @@ import {
 } from "lucide-react"
 import { ExpenseInfoData } from "./ExpenseInfoCards"
 
-
-
-
-
-
-interface PaymentHistoryResponse {
-  payments: PaymentRecord[]
-  pagination: {
-    total: number
-    limit: number
-    offset: number
-    hasMore: boolean
-  }
-  filters: {
-    startDate: string | null
-    endDate: string | null
-    status: string | null
-    currency: string | null
-  }
-}
+// The API client already extracts the data field, so we get the array directly
+type PaymentHistoryApiResponse = PaymentRecordApi[]
 
 interface ExpenseDetailDialogProps {
   isOpen: boolean
@@ -59,24 +41,11 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalRecords, setTotalRecords] = useState(0)
-  
+
+
   const pageSize = 10
 
-  // Fetch payment data when dialog opens
-  useEffect(() => {
-    if (isOpen && periodData) {
-      fetchPaymentData()
-    }
-  }, [isOpen, periodData])
-
-  // Reset current page when search term changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm])
-
-  const fetchPaymentData = async () => {
+  const fetchPaymentData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -91,10 +60,8 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
         const startDateStr = startDate.toISOString().split('T')[0]
         const endDateStr = endDate.toISOString().split('T')[0]
 
-        const response = await apiClient.get<any>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
-        const rawData = response.payments || response.data || response || []
+        const rawData = await apiClient.get<PaymentHistoryApiResponse>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
         allPaymentDetails = transformPaymentsFromApi(rawData)
-
       } else {
         // 季度或年度数据：直接从 payment-history API 获取整个时间范围的数据
         const startDate = new Date(periodData.startDate)
@@ -103,20 +70,29 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
         const startDateStr = startDate.toISOString().split('T')[0]
         const endDateStr = endDate.toISOString().split('T')[0]
 
-        const response = await apiClient.get<any>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
-        const rawData = response.payments || response.data || response || []
+        const rawData = await apiClient.get<PaymentHistoryApiResponse>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
         allPaymentDetails = transformPaymentsFromApi(rawData)
       }
 
       setPayments(allPaymentDetails)
-      setTotalRecords(allPaymentDetails.length)
-      setTotalPages(Math.ceil(allPaymentDetails.length / pageSize))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load payment data')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [periodData])
+
+  // Fetch payment data when dialog opens
+  useEffect(() => {
+    if (isOpen && periodData) {
+      fetchPaymentData()
+    }
+  }, [isOpen, periodData, fetchPaymentData])
+
+  // Reset current page when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   // Filter payments based on search term
   const filteredPayments = payments.filter(payment =>

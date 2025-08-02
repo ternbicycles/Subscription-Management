@@ -73,7 +73,7 @@ export function SubscriptionForm({
   // Initialize form with initial data if provided
   useEffect(() => {
     if (initialData) {
-      const { lastBillingDate, category, paymentMethod, ...formData } = initialData
+      const { ...formData } = initialData
       setForm({
         ...formData,
         website: formData.website || ""

@@ -14,7 +14,7 @@ export const validateForm = (form: SubscriptionFormData): FormErrors => {
 
 export const handleFieldChange = (
   name: string,
-  value: any,
+  value: unknown,
   setForm: React.Dispatch<React.SetStateAction<SubscriptionFormData>>,
   errors: FormErrors,
   setErrors: React.Dispatch<React.SetStateAction<FormErrors>>

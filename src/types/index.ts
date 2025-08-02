@@ -114,5 +114,5 @@ export interface ChartDataPoint {
 export interface TrendDataPoint {
   period: string;
   amount: number;
-  [key: string]: any; // For category data
+  [key: string]: unknown; // For category data
 }

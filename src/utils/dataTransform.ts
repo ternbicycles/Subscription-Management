@@ -98,7 +98,7 @@ export const transformPaymentsFromApi = (payments: PaymentRecordApi[]): PaymentR
  * @param obj 包含snake_case键的对象
  * @returns 包含camelCase键的对象
  */
-export const snakeToCamel = (obj: any): any => {
+export const snakeToCamel = (obj: unknown): unknown => {
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj
   }
@@ -107,7 +107,7 @@ export const snakeToCamel = (obj: any): any => {
     return obj.map(snakeToCamel)
   }
 
-  const result: any = {}
+  const result: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
     result[camelKey] = snakeToCamel(value)
@@ -120,7 +120,7 @@ export const snakeToCamel = (obj: any): any => {
  * @param obj 包含camelCase键的对象
  * @returns 包含snake_case键的对象
  */
-export const camelToSnake = (obj: any): any => {
+export const camelToSnake = (obj: unknown): unknown => {
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj
   }
@@ -129,7 +129,7 @@ export const camelToSnake = (obj: any): any => {
     return obj.map(camelToSnake)
   }
 
-  const result: any = {}
+  const result: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(obj)) {
     const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
     result[snakeKey] = camelToSnake(value)

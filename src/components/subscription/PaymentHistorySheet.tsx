@@ -177,7 +177,7 @@ export function PaymentHistorySheet({
       }
       await onSubmit(submitData)
       onOpenChange(false) // Close sheet on successful submission
-    } catch (error) {
+    } catch {
       // Error handling is done in the parent component
     } finally {
       setIsSubmitting(false)
@@ -185,7 +185,7 @@ export function PaymentHistorySheet({
   }
 
   // Handle form field changes
-  const handleFieldChange = (field: keyof PaymentFormData, value: any) => {
+  const handleFieldChange = (field: keyof PaymentFormData, value: unknown) => {
     setForm(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {

@@ -39,7 +39,7 @@ export function calculateNextBillingDateFromStart(
   const start = new Date(startDate)
 
   // Start with the start date as the base
-  let nextBilling = new Date(start)
+  const nextBilling = new Date(start)
 
   // Keep adding billing cycles until we get a date after today
   while (nextBilling <= today) {
@@ -132,7 +132,7 @@ export function getStatusVariant(status: SubscriptionStatus): 'default' | 'secon
  * Get category label from subscription data with fallback to store data
  */
 export function getCategoryLabel(
-  subscription: any,
+  subscription: { categoryId?: number; category?: { label: string } },
   categories: Array<{ id: number; value: string; label: string }>
 ): string {
   return subscription.category?.label ||
@@ -144,7 +144,7 @@ export function getCategoryLabel(
  * Get payment method label from subscription data with fallback to store data
  */
 export function getPaymentMethodLabel(
-  subscription: any,
+  subscription: { paymentMethodId?: number; paymentMethod?: { label: string } },
   paymentMethods: Array<{ id: number; value: string; label: string }>
 ): string {
   return subscription.paymentMethod?.label ||
@@ -321,11 +321,12 @@ export function parseCSVToSubscriptions(
       }
       
       // Create an object with the CSV values
-      const subscription: any = {}
+      const subscription: Record<string, unknown> = {}
       headers.forEach((header, index) => {
         if (header === 'amount') {
-          subscription[header] = parseFloat(values[index])
-          if (isNaN(subscription[header])) {
+          const amount = parseFloat(values[index])
+          subscription[header] = amount
+          if (isNaN(amount)) {
             throw new Error(`Invalid amount value: ${values[index]}`)
           }
         } else {
@@ -341,17 +342,17 @@ export function parseCSVToSubscriptions(
       }
       
       // Validate status field
-      if (!['active', 'trial', 'cancelled'].includes(subscription.status)) {
+      if (!['active', 'trial', 'cancelled'].includes(subscription.status as string)) {
         throw new Error(`Invalid status value: ${subscription.status}. Must be 'active', 'trial', or 'cancelled'.`)
       }
-      
+
       // Validate billing cycle
-      if (!['monthly', 'yearly', 'quarterly'].includes(subscription.billingCycle)) {
+      if (!['monthly', 'yearly', 'quarterly'].includes(subscription.billingCycle as string)) {
         throw new Error(`Invalid billingCycle value: ${subscription.billingCycle}. Must be 'monthly', 'yearly', or 'quarterly'.`)
       }
 
       // Validate renewal type (optional field with default)
-      if (subscription.renewalType && !['auto', 'manual'].includes(subscription.renewalType)) {
+      if (subscription.renewalType && !['auto', 'manual'].includes(subscription.renewalType as string)) {
         throw new Error(`Invalid renewalType value: ${subscription.renewalType}. Must be 'auto' or 'manual'.`)
       }
 
@@ -381,8 +382,9 @@ export function parseCSVToSubscriptions(
       }
 
       subscriptions.push(subscription as Omit<Subscription, 'id' | 'lastBillingDate'>)
-    } catch (error: any) {
-      errors.push(`Line ${i + 1}: ${error.message}`)
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      errors.push(`Line ${i + 1}: ${errorMessage}`)
     }
   }
   

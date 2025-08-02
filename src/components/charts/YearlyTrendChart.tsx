@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartConfig } from "@/components/ui/chart"
 import { formatCurrencyAmount } from "@/utils/currency"
 import { YearlyExpense } from "@/lib/expense-analytics-api"
-import { TrendingUp, TrendingDown, LineChart as LineChartIcon, BarChart3 } from "lucide-react"
+import { LineChart as LineChartIcon, BarChart3 } from "lucide-react"
 import { useState } from "react"
 
 interface YearlyTrendChartProps {
@@ -70,13 +70,9 @@ export function YearlyTrendChart({ data, categoryData, currency, className }: Ye
     return `hsl(var(--${colorKeys[index % colorKeys.length]}))`
   }
 
-  // Calculate trend (kept for potential future use)
-  const trend = data.length >= 2 
-    ? ((data[data.length - 1].amount - data[0].amount) / data[0].amount) * 100
-    : 0
+
   
-  const isPositiveTrend = trend > 0
-  const TrendIcon = isPositiveTrend ? TrendingUp : TrendingDown
+
 
   const renderChart = () => {
     if (chartType === 'line') {

@@ -124,7 +124,7 @@ export function generateExpenseData(
   const monthlyAmount = calculateMonthlyAmount(subscription, targetCurrency)
 
   // Iterate through each month in the given date range
-  let currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1)
+  const currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1)
   
   while (currentMonth <= endDate) {
     if (isSubscriptionActiveInMonth(subscription, currentMonth)) {
@@ -190,7 +190,7 @@ export function getMonthlyExpenses(
       if (a.year !== b.year) return a.year - b.year
       return a.monthNumber - b.monthNumber
     })
-    .map(({ monthKey, monthNumber, ...rest }) => rest) // 移除临时字段
+    .map(({ ...rest }) => rest) // 移除临时字段
 }
 
 /**

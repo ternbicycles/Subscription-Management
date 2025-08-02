@@ -223,7 +223,7 @@ export function OptionsManager() {
         title: "Option updated",
         description: `${type} option has been updated successfully.`
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: `Failed to update ${type} option.`,
@@ -249,7 +249,7 @@ export function OptionsManager() {
         title: "Option deleted",
         description: `${deleteTarget.type} option has been deleted successfully.`
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: `Failed to delete ${deleteTarget.type} option.`,
@@ -296,7 +296,7 @@ export function OptionsManager() {
         title: "Option added",
         description: `New ${type} option has been added successfully.`
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: `Failed to add ${type} option.`,

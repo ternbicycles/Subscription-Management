@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { 
   Calendar, 
   Plus, 
@@ -15,6 +15,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/ui/search-input"
 import { useToast } from "@/hooks/use-toast"
+
+// Helper function to safely extract error message
+const getErrorMessage = (error: unknown): string => {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message)
+  }
+  return String(error)
+}
 import {
   Popover,
   PopoverContent,
@@ -39,7 +47,7 @@ import {
   BillingCycle
 } from "@/store/subscriptionStore"
 import { useSettingsStore } from "@/store/settingsStore"
-import { exportSubscriptionsToCSV, exportSubscriptionsToJSON } from "@/lib/subscription-utils"
+import { exportSubscriptionsToJSON } from "@/lib/subscription-utils"
 
 import { SubscriptionCard } from "@/components/subscription/SubscriptionCard"
 import { SubscriptionForm } from "@/components/subscription/SubscriptionForm"
@@ -72,20 +80,20 @@ export function SubscriptionsPage() {
     fetchSubscriptions,
     getUniqueCategories,
     initializeData,
-    initializeWithRenewals,
+
     manualRenewSubscription,
     isLoading
   } = useSubscriptionStore()
 
   // Initialize subscriptions without auto-renewals
-  useEffect(() => {
-    const initialize = async () => {
-      await fetchSettings()
-      await initializeData()
-    }
+  const initialize = useCallback(async () => {
+    await fetchSettings()
+    await initializeData()
+  }, [fetchSettings, initializeData])
 
+  useEffect(() => {
     initialize()
-  }, []) // Remove dependencies to prevent infinite re-renders
+  }, [initialize])
   
   // Get categories actually in use
   const usedCategories = getUniqueCategories()
@@ -144,7 +152,7 @@ export function SubscriptionsPage() {
     if (error) {
       toast({
         title: "Error adding subscription",
-        description: error.message || "Failed to add subscription",
+        description: getErrorMessage(error) || "Failed to add subscription",
         variant: "destructive"
       })
       return
@@ -163,7 +171,7 @@ export function SubscriptionsPage() {
     if (error) {
       toast({
         title: "Error updating subscription",
-        description: error.message || "Failed to update subscription",
+        description: getErrorMessage(error) || "Failed to update subscription",
         variant: "destructive"
       })
       return
@@ -188,7 +196,7 @@ export function SubscriptionsPage() {
     if (error) {
       toast({
         title: "Error deleting subscription",
-        description: error.message || "Failed to delete subscription",
+        description: getErrorMessage(error) || "Failed to delete subscription",
         variant: "destructive"
       })
       return
@@ -230,7 +238,7 @@ export function SubscriptionsPage() {
     if (error) {
       toast({
         title: "Error updating status",
-        description: error.message || "Failed to update status",
+        description: getErrorMessage(error) || "Failed to update status",
         variant: "destructive"
       })
       return
@@ -258,15 +266,19 @@ export function SubscriptionsPage() {
     if (error) {
       toast({
         title: "Error renewing subscription",
-        description: error,
+        description: getErrorMessage(error),
         variant: "destructive"
       })
       return
     }
 
+    const newBillingDate = renewalData && typeof renewalData === 'object' && 'newNextBilling' in renewalData
+      ? String(renewalData.newNextBilling)
+      : 'Unknown'
+
     toast({
       title: "Subscription renewed successfully",
-      description: `${subscription.name} has been renewed. Next billing date: ${renewalData?.newNextBilling}`
+      description: `${subscription.name} has been renewed. Next billing date: ${newBillingDate}`
     })
   }
 
@@ -299,7 +311,7 @@ export function SubscriptionsPage() {
     if (error) {
       toast({
         title: "Import failed",
-        description: error.message || "Failed to import subscriptions",
+        description: getErrorMessage(error) || "Failed to import subscriptions",
         variant: "destructive",
       });
     } else {
@@ -726,7 +738,6 @@ export function SubscriptionsPage() {
               onEdit={() => setEditingSubscription(subscription)}
               onDelete={() => handleDeleteClick(subscription.id)}
               onStatusChange={handleStatusChange}
-              onManualRenew={handleManualRenew}
               onViewDetails={(subscription) => setDetailSubscription(subscription)}
             />
           ))}

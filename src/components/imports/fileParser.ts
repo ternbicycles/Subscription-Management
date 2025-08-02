@@ -1,5 +1,54 @@
 import { parseCSVToSubscriptions } from "@/lib/subscription-utils"
 import { SubscriptionImportData } from "./types"
+import { SubscriptionStatus, BillingCycle, RenewalType } from "@/store/subscriptionStore"
+
+interface SubscriptionRawData {
+  name?: string
+  plan?: string
+  billingCycle?: string
+  nextBillingDate?: string
+  amount?: number | string
+  currency?: string
+  paymentMethodId?: number
+  startDate?: string
+  status?: string
+  categoryId?: number
+  renewalType?: string
+  notes?: string
+  website?: string
+}
+
+interface JsonDataWithState {
+  state?: {
+    subscriptions?: SubscriptionRawData[]
+  }
+}
+
+interface JsonDataWithSubscriptions {
+  subscriptions?: SubscriptionRawData[]
+}
+
+// Helper functions to validate and cast enum types
+const validateStatus = (status: string | undefined): SubscriptionStatus => {
+  if (status === 'active' || status === 'trial' || status === 'cancelled') {
+    return status as SubscriptionStatus
+  }
+  return 'active' // default fallback
+}
+
+const validateBillingCycle = (billingCycle: string | undefined): BillingCycle => {
+  if (billingCycle === 'monthly' || billingCycle === 'yearly' || billingCycle === 'quarterly') {
+    return billingCycle as BillingCycle
+  }
+  return 'monthly' // default fallback
+}
+
+const validateRenewalType = (renewalType: string | undefined): RenewalType => {
+  if (renewalType === 'auto' || renewalType === 'manual') {
+    return renewalType as RenewalType
+  }
+  return 'manual' // default fallback
+}
 
 export const parseFileContent = (
   file: File,
@@ -19,37 +68,38 @@ export const parseFileContent = (
       const data = JSON.parse(content)
       
       // Check if it's our storage format
-      if (data.state?.subscriptions && Array.isArray(data.state.subscriptions)) {
-        setSubscriptions(data.state.subscriptions.map((sub: any) => ({
-          name: sub.name,
-          plan: sub.plan,
-          billingCycle: sub.billingCycle,
-          nextBillingDate: sub.nextBillingDate,
-          amount: sub.amount,
-          currency: sub.currency,
+      const dataWithState = data as JsonDataWithState
+      if (dataWithState.state?.subscriptions && Array.isArray(dataWithState.state.subscriptions)) {
+        setSubscriptions(dataWithState.state.subscriptions.map((sub: SubscriptionRawData) => ({
+          name: sub.name || 'Unknown Subscription',
+          plan: sub.plan || 'Basic',
+          billingCycle: validateBillingCycle(sub.billingCycle),
+          nextBillingDate: sub.nextBillingDate || new Date().toISOString().split('T')[0],
+          amount: Number(sub.amount) || 0,
+          currency: sub.currency || 'USD',
           paymentMethodId: sub.paymentMethodId || 1,
-          startDate: sub.startDate,
-          status: sub.status,
+          startDate: sub.startDate || new Date().toISOString().split('T')[0],
+          status: validateStatus(sub.status),
           categoryId: sub.categoryId || 10,
-          renewalType: sub.renewalType || 'manual',
-          notes: sub.notes,
-          website: sub.website,
+          renewalType: validateRenewalType(sub.renewalType),
+          notes: sub.notes || '',
+          website: sub.website || '',
         })))
       } else if (Array.isArray(data)) {
         // Check if it's a direct array of subscriptions
         if (data.length > 0 && 'name' in data[0] && 'amount' in data[0]) {
-          setSubscriptions(data.map((sub: any) => ({
+          setSubscriptions((data as SubscriptionRawData[]).map((sub: SubscriptionRawData) => ({
             name: sub.name || 'Unknown Subscription',
             plan: sub.plan || 'Basic',
-            billingCycle: sub.billingCycle || 'monthly',
+            billingCycle: validateBillingCycle(sub.billingCycle),
             nextBillingDate: sub.nextBillingDate || new Date().toISOString().split('T')[0],
             amount: Number(sub.amount) || 0,
             currency: sub.currency || 'USD',
             paymentMethodId: sub.paymentMethodId || 1,
             startDate: sub.startDate || new Date().toISOString().split('T')[0],
-            status: sub.status || 'active',
+            status: validateStatus(sub.status),
             categoryId: sub.categoryId || 10,
-            renewalType: sub.renewalType || 'manual',
+            renewalType: validateRenewalType(sub.renewalType),
             notes: sub.notes || '',
             website: sub.website || '',
           })))
@@ -58,18 +108,19 @@ export const parseFileContent = (
         }
       } else if ('subscriptions' in data && Array.isArray(data.subscriptions)) {
         // Format with direct subscriptions property
-        setSubscriptions(data.subscriptions.map((sub: any) => ({
+        const dataWithSubs = data as JsonDataWithSubscriptions
+        setSubscriptions(dataWithSubs.subscriptions!.map((sub: SubscriptionRawData) => ({
           name: sub.name || 'Unknown Subscription',
           plan: sub.plan || 'Basic',
-          billingCycle: sub.billingCycle || 'monthly',
+          billingCycle: validateBillingCycle(sub.billingCycle),
           nextBillingDate: sub.nextBillingDate || new Date().toISOString().split('T')[0],
           amount: Number(sub.amount) || 0,
           currency: sub.currency || 'USD',
           paymentMethodId: sub.paymentMethodId || 1,
           startDate: sub.startDate || new Date().toISOString().split('T')[0],
-          status: sub.status || 'active',
+          status: validateStatus(sub.status),
           categoryId: sub.categoryId || 10,
-          renewalType: sub.renewalType || 'manual',
+          renewalType: validateRenewalType(sub.renewalType),
           notes: sub.notes || '',
           website: sub.website || '',
         })))
@@ -79,7 +130,8 @@ export const parseFileContent = (
     } else {
       setErrors(['Unsupported file format. Please upload a CSV or JSON file.'])
     }
-  } catch (error: any) {
-    setErrors([`Error parsing file: ${error.message}`])
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    setErrors([`Error parsing file: ${errorMessage}`])
   }
 }

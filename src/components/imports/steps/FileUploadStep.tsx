@@ -5,7 +5,7 @@ interface FileUploadStepProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-export function FileUploadStep({ file, onFileChange }: FileUploadStepProps) {
+export function FileUploadStep({ onFileChange }: FileUploadStepProps) {
   return (
     <div className="space-y-6 py-6">
       <div 

@@ -1,9 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useSubscriptionStore } from "@/store/subscriptionStore"
 import { useSettingsStore } from "@/store/settingsStore"
-import {
-  getDateRangePresets
-} from "@/lib/expense-analytics"
 import {
   getApiMonthlyExpenses,
   getApiCategoryExpenses,
@@ -32,32 +29,57 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 
 export function ExpenseReportsPage() {
-  const { subscriptions, categories, fetchSubscriptions, fetchCategories } = useSubscriptionStore()
+  const { fetchSubscriptions, fetchCategories } = useSubscriptionStore()
   const { currency: userCurrency, fetchSettings } = useSettingsStore()
   
   // Filter states
-  const [selectedDateRange, setSelectedDateRange] = useState('Last 12 Months')
-  const [selectedYearlyDateRange, setSelectedYearlyDateRange] = useState(() => {
+  const [selectedDateRange] = useState('Last 12 Months')
+  const [selectedYearlyDateRange] = useState(() => {
     const currentYear = new Date().getFullYear()
     return `${currentYear - 2} - ${currentYear}`
   })
 
   // Fetch data when component mounts
+  const initializeData = useCallback(async () => {
+    await fetchSubscriptions()
+    await fetchCategories()
+    await fetchSettings()
+  }, [fetchSubscriptions, fetchCategories, fetchSettings])
+
   useEffect(() => {
-    const initializeData = async () => {
-      await fetchSubscriptions()
-      await fetchCategories()
-      await fetchSettings()
+    initializeData()
+  }, [initializeData])
+
+  // Get date range presets - create stable date range
+  const currentDateRange = useMemo(() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth()
+
+    const presets = {
+      'Last 3 Months': {
+        startDate: new Date(currentYear, currentMonth - 2, 1),
+        endDate: now
+      },
+      'Last 6 Months': {
+        startDate: new Date(currentYear, currentMonth - 5, 1),
+        endDate: now
+      },
+      'Last 12 Months': {
+        startDate: new Date(currentYear, currentMonth - 11, 1),
+        endDate: now
+      },
+      'This Year': {
+        startDate: new Date(currentYear, 0, 1),
+        endDate: now
+      },
+      'Last Year': {
+        startDate: new Date(currentYear - 1, 0, 1),
+        endDate: new Date(currentYear - 1, 11, 31)
+      }
     }
 
-    initializeData()
-  }, []) // Remove dependencies to prevent infinite re-renders
-
-  // Get date range presets
-  const dateRangePresets = getDateRangePresets()
-  const currentDateRange = useMemo(() => {
-    return dateRangePresets.find(preset => preset.label === selectedDateRange)
-      || dateRangePresets[2] // Default to Last 12 Months
+    return presets[selectedDateRange as keyof typeof presets] || presets['Last 12 Months']
   }, [selectedDateRange])
 
   // Get yearly date range presets (fixed recent 3 years)
@@ -102,15 +124,17 @@ export function ExpenseReportsPage() {
   const [isLoadingYearlyExpenses, setIsLoadingYearlyExpenses] = useState(false)
   const [isLoadingCategoryExpenses, setIsLoadingCategoryExpenses] = useState(false)
   const [isLoadingYearlyCategoryExpenses, setIsLoadingYearlyCategoryExpenses] = useState(false)
-  const [isLoadingMonthlyCategoryExpenses, setIsLoadingMonthlyCategoryExpenses] = useState(false)
-  const [isLoadingYearlyGroupedCategoryExpenses, setIsLoadingYearlyGroupedCategoryExpenses] = useState(false)
+  const [, setIsLoadingMonthlyCategoryExpenses] = useState(false)
+  const [, setIsLoadingYearlyGroupedCategoryExpenses] = useState(false)
+
   const [isLoadingExpenseInfo, setIsLoadingExpenseInfo] = useState(false)
   const [expenseError, setExpenseError] = useState<string | null>(null)
   const [yearlyExpenseError, setYearlyExpenseError] = useState<string | null>(null)
   const [categoryExpenseError, setCategoryExpenseError] = useState<string | null>(null)
   const [yearlyCategoryExpenseError, setYearlyCategoryExpenseError] = useState<string | null>(null)
-  const [monthlyCategoryExpenseError, setMonthlyCategoryExpenseError] = useState<string | null>(null)
-  const [yearlyGroupedCategoryExpenseError, setYearlyGroupedCategoryExpenseError] = useState<string | null>(null)
+  const [, setMonthlyCategoryExpenseError] = useState<string | null>(null)
+  const [, setYearlyGroupedCategoryExpenseError] = useState<string | null>(null)
+
   const [expenseInfoError, setExpenseInfoError] = useState<string | null>(null)
 
 

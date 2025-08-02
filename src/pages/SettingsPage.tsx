@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import { Download, Upload, Eye, EyeOff } from "lucide-react"
+
+import { Subscription } from "@/store/subscriptionStore"
 
 import {
   Card,
@@ -76,9 +78,13 @@ export function SettingsPage() {
   // Subscription store methods
   const { subscriptions, resetSubscriptions, addSubscription } = useSubscriptionStore()
 
-  useEffect(() => {
+  const initializeSettings = useCallback(() => {
     fetchSettings()
-  }, []) // Remove dependencies to prevent infinite re-renders
+  }, [fetchSettings])
+
+  useEffect(() => {
+    initializeSettings()
+  }, [initializeSettings])
   
   // When the API key from the store changes, update the local state
   useEffect(() => {
@@ -104,9 +110,12 @@ export function SettingsPage() {
   }
 
   // Handle imports
-  const handleImportData = (subscriptionData: any[]) => {
+  const handleImportData = (subscriptionData: unknown[]) => {
     subscriptionData.forEach((sub) => {
-      addSubscription(sub)
+      // Type guard to ensure sub has the required properties
+      if (sub && typeof sub === 'object' && 'name' in sub) {
+        addSubscription(sub as Omit<Subscription, "id" | "lastBillingDate">)
+      }
     })
   }
 

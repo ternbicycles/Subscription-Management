@@ -2,8 +2,33 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ExchangeRateApi, type ExchangeRateConfigStatus } from '@/services/exchangeRateApi'
 import { logger } from '@/utils/logger'
-import { BASE_CURRENCY, DEFAULT_EXCHANGE_RATES, type CurrencyType } from '@/config/currency'
+import { BASE_CURRENCY, DEFAULT_EXCHANGE_RATES, type CurrencyType, SUPPORTED_CURRENCIES } from '@/config/currency'
 import { apiClient } from '@/utils/api-client'
+
+// Helper function to validate currency type
+const validateCurrency = (currency: string | undefined): CurrencyType => {
+  if (currency && SUPPORTED_CURRENCIES.includes(currency as CurrencyType)) {
+    return currency as CurrencyType
+  }
+  return BASE_CURRENCY // default fallback
+}
+
+// Helper function to validate theme type
+const validateTheme = (theme: string | undefined): ThemeType => {
+  if (theme === 'light' || theme === 'dark' || theme === 'system') {
+    return theme as ThemeType
+  }
+  return 'system' // default fallback
+}
+
+interface SettingsApiResponse {
+  currency?: string
+  theme?: string
+  show_original_currency?: boolean
+  api_key?: string
+  exchange_rates?: Record<string, number>
+  [key: string]: unknown
+}
 
 export type ThemeType = 'light' | 'dark' | 'system'
 
@@ -61,10 +86,10 @@ export const useSettingsStore = create<SettingsState>()(
       fetchSettings: async () => {
         set({ isLoading: true, error: null })
         try {
-          const loadedSettings = await apiClient.get<any>('/settings')
+          const loadedSettings = await apiClient.get<SettingsApiResponse>('/settings')
           const settings = {
-            currency: loadedSettings.currency || initialSettings.currency,
-            theme: loadedSettings.theme || initialSettings.theme,
+            currency: validateCurrency(loadedSettings.currency),
+            theme: validateTheme(loadedSettings.theme),
             showOriginalCurrency: loadedSettings.show_original_currency !== undefined
               ? Boolean(loadedSettings.show_original_currency)
               : initialSettings.showOriginalCurrency,
@@ -77,15 +102,17 @@ export const useSettingsStore = create<SettingsState>()(
           get().fetchExchangeRates()
           get().fetchExchangeRateConfigStatus()
 
-        } catch (error: any) {
+        } catch (error: unknown) {
           // If settings don't exist, the backend might 404, which is okay.
-          if (error.status === 404) {
+          const errorObj = error as { status?: number; message?: string }
+          if (errorObj.status === 404) {
             logger.warn('Settings not found on backend. Using local/default settings.')
             set({ isLoading: false })
             return
           }
           logger.error('Error fetching settings:', error)
-          set({ error: error.message, isLoading: false })
+          const errorMessage = errorObj.message || 'Unknown error occurred'
+          set({ error: errorMessage, isLoading: false })
         }
       },
       
@@ -97,7 +124,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Sync to backend
         try {
           await apiClient.put('/protected/settings', { currency })
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error saving currency setting:', error)
           // Could optionally revert the local change here
         }
@@ -111,7 +138,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Sync to backend
         try {
           await apiClient.put('/protected/settings', { theme })
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error saving theme setting:', error)
         }
       },
@@ -123,7 +150,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Sync to backend
         try {
           await apiClient.put('/protected/settings', { showOriginalCurrency })
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error saving showOriginalCurrency setting:', error)
           // Could optionally revert the local change here
         }
@@ -147,7 +174,7 @@ export const useSettingsStore = create<SettingsState>()(
             exchangeRates: rateMap,
             lastExchangeRateUpdate: new Date().toISOString()
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error fetching exchange rates:', error);
           // 保持现有汇率，不更新错误状态，因为这可能在后台运行
         }
@@ -163,9 +190,10 @@ export const useSettingsStore = create<SettingsState>()(
           await ExchangeRateApi.updateRates();
           // 更新成功后重新获取汇率
           await get().fetchExchangeRates();
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error updating exchange rates:', error);
-          set({ error: error.message });
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage });
           throw error;
         }
       },
@@ -174,7 +202,7 @@ export const useSettingsStore = create<SettingsState>()(
         try {
           const configStatus = await ExchangeRateApi.getConfigStatus();
           set({ exchangeRateConfigStatus: configStatus });
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error fetching exchange rate config status:', error);
           // 不设置错误状态，因为这不是关键功能
         }
@@ -189,9 +217,10 @@ export const useSettingsStore = create<SettingsState>()(
           // Don't apply theme here - let next-themes handle it
 
           return { error: null }
-        } catch (error: any) {
+        } catch (error: unknown) {
           logger.error('Error resetting settings:', error)
-          set({ error: error.message })
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage })
           return { error }
         }
       },
@@ -200,7 +229,7 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'settings-storage',
       // Persist all settings except for loading/error states.
       partialize: (state) => {
-        const { isLoading, error, ...rest } = state;
+        const { ...rest } = state;
         // Functions are not persisted, so we don't need to omit them.
         return rest;
       }

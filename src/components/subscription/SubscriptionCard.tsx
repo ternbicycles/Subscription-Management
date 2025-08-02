@@ -14,7 +14,6 @@ import { Subscription, useSubscriptionStore } from "@/store/subscriptionStore"
 import {
   formatDate,
   daysUntil,
-  getStatusColor,
   getBillingCycleLabel,
   getCategoryLabel,
   getPaymentMethodLabel
@@ -40,7 +39,6 @@ interface SubscriptionCardProps {
   onEdit: (id: number) => void
   onDelete: (id: number) => void
   onStatusChange: (id: number, status: 'active' | 'cancelled') => void
-  onManualRenew?: (id: number) => void
   onViewDetails?: (subscription: Subscription) => void
 }
 
@@ -49,7 +47,6 @@ export function SubscriptionCard({
   onEdit,
   onDelete,
   onStatusChange,
-  onManualRenew,
   onViewDetails
 }: SubscriptionCardProps) {
   const {
@@ -60,11 +57,8 @@ export function SubscriptionCard({
     currency,
     nextBillingDate,
     billingCycle,
-    paymentMethod,
     status,
-    category,
-    renewalType,
-    website
+    renewalType
   } = subscription
   
   // Get options from the store

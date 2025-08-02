@@ -2,9 +2,7 @@ import {
   getMonthlyCategorySummaries,
   getMonthCategorySummary,
   getTotalSummary,
-  type MonthlyCategorySummariesResponse,
-  type MonthCategorySummaryResponse,
-  type TotalSummaryResponse
+  type MonthlyCategorySummariesResponse
 } from '@/services/monthlyCategorySummaryApi';
 import { convertCurrency } from '@/utils/currency';
 import { getBaseCurrency } from '@/config/currency';
