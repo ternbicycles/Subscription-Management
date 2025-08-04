@@ -36,7 +36,19 @@
     "monthlySpendingByCategory": "Monthly spending by category (Last 12 months)",
     "annualSpendingOverTime": "Annual spending over time",
     "annualSpendingByCategory": "Annual spending by category",
-    "breakdownByCategory": "Breakdown of expenses by subscription category (Last 12 months)"
+    "breakdownByCategory": "Breakdown of expenses by subscription category (Last 12 months)",
+    "paymentDetails": "Payment Details",
+    "viewPaymentRecords": "View all payment records for this period",
+    "dailyAvg": "Daily Avg",
+    "searchSubscriptions": "Search subscriptions...",
+    "errorLoadingPayments": "Error loading payments",
+    "noPaymentsFoundPeriod": "No payments found for this period",
+    "unknownSubscription": "Unknown Subscription",
+    "unknownPlan": "Unknown Plan",
+    "unknown": "Unknown",
+    "allocated": "Allocated",
+    "showingPayments": "Showing {{start}} to {{end}} of {{total}} payments",
+    "pageOf": "Page {{current}} of {{total}}"
   },
   "infoCards": {
     "total": "Total",
@@ -49,21 +61,5 @@
     "noMonthlyDataAvailable": "No monthly data available",
     "noQuarterlyDataAvailable": "No quarterly data available",
     "noYearlyDataAvailable": "No yearly data available"
-  },
-  "chart": {
-    "paymentDetails": "Payment Details",
-    "viewPaymentRecords": "View all payment records for this period",
-    "total": "Total",
-    "payments": "Payments",
-    "dailyAvg": "Daily Avg",
-    "searchSubscriptions": "Search subscriptions...",
-    "errorLoadingPayments": "Error loading payments",
-    "noPaymentsFoundPeriod": "No payments found for this period",
-    "unknownSubscription": "Unknown Subscription",
-    "unknownPlan": "Unknown Plan",
-    "unknown": "Unknown",
-    "allocated": "Allocated",
-    "showingPayments": "Showing {{start}} to {{end}} of {{total}} payments",
-    "pageOf": "Page {{current}} of {{total}}"
   }
 }

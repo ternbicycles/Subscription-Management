@@ -36,7 +36,19 @@
     "monthlySpendingByCategory": "按类别月度支出（过去12个月）",
     "annualSpendingOverTime": "年度支出趋势",
     "annualSpendingByCategory": "按类别年度支出",
-    "breakdownByCategory": "按订阅类别支出明细（过去12个月）"
+    "breakdownByCategory": "按订阅类别支出明细（过去12个月）",
+    "paymentDetails": "支付详情",
+    "viewPaymentRecords": "查看此期间的所有支付记录",
+    "dailyAvg": "日均",
+    "searchSubscriptions": "搜索订阅...",
+    "errorLoadingPayments": "加载支付时出错",
+    "noPaymentsFoundPeriod": "此期间未找到支付记录",
+    "unknownSubscription": "未知订阅",
+    "unknownPlan": "未知套餐",
+    "unknown": "未知",
+    "allocated": "已分配",
+    "showingPayments": "显示第{{start}}至{{end}}条，共{{total}}条支付记录",
+    "pageOf": "第{{current}}页，共{{total}}页"
   },
   "infoCards": {
     "total": "总计",
@@ -49,21 +61,5 @@
     "noMonthlyDataAvailable": "暂无月度数据",
     "noQuarterlyDataAvailable": "暂无季度数据",
     "noYearlyDataAvailable": "暂无年度数据"
-  },
-  "chart": {
-    "paymentDetails": "支付详情",
-    "viewPaymentRecords": "查看此期间的所有支付记录",
-    "total": "总计",
-    "payments": "支付次数",
-    "dailyAvg": "日均",
-    "searchSubscriptions": "搜索订阅...",
-    "errorLoadingPayments": "加载支付时出错",
-    "noPaymentsFoundPeriod": "此期间未找到支付记录",
-    "unknownSubscription": "未知订阅",
-    "unknownPlan": "未知套餐",
-    "unknown": "未知",
-    "allocated": "已分配",
-    "showingPayments": "显示第{{start}}至{{end}}条，共{{total}}条支付记录",
-    "pageOf": "第{{current}}页，共{{total}}页"
   }
 }
