@@ -9,7 +9,7 @@ class SubscriptionService extends BaseRepository {
     constructor(db) {
         super(db, 'subscriptions');
         this.monthlyCategorySummaryService = new MonthlyCategorySummaryService(db.name);
-        this.notificationService = new NotificationService();
+        this.notificationService = new NotificationService(db);
     }
 
     /**

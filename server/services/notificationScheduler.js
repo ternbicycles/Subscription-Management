@@ -5,7 +5,7 @@ const { createDatabaseConnection } = require('../config/database');
 class NotificationScheduler {
     constructor() {
         this.db = createDatabaseConnection();
-        this.notificationService = new NotificationService();
+        this.notificationService = new NotificationService(this.db);
         this.job = null;
     }
 

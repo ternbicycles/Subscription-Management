@@ -2,8 +2,8 @@ const TelegramService = require('./telegramService');
 const { createDatabaseConnection } = require('../config/database');
 
 class NotificationService {
-    constructor() {
-        this.db = createDatabaseConnection();
+    constructor(db = null) {
+        this.db = db || createDatabaseConnection();
         this.telegramService = new TelegramService();
     }
 

@@ -253,66 +253,67 @@ class DatabaseMigrations {
     // Insert default notification templates for Telegram
     this.db.exec(`
       INSERT OR IGNORE INTO notification_templates (notification_type, language, channel_type, template_name, content_template) VALUES
-      ('renewal_reminder', 'zh-CN', 'telegram', 'default', 
-        '<b>续订提醒</b>
-
-📢 <b>{{name}}</b> 即将到期
-
-📅 到期时间: {{next_billing_date}}
-💰 金额: {{amount}} {{currency}}
-💳 支付方式: {{payment_method}}
-📋 计划: {{plan}}
-
-请及时续订以避免服务中断。'),
+      ('renewal_reminder', 'en', 'telegram', 'default', 
+        '<b>Renewal Reminder</b>
+    
+    📢 <b>{{name}}</b> is about to expire
+    
+    📅 Expiration date: {{next_billing_date}}
+    💰 Amount: {{amount}} {{currency}}
+    💳 Payment method: {{payment_method}}
+    📋 Plan: {{plan}}
+    
+    Please renew in time to avoid service interruption.'),
       
-      ('expiration_warning', 'zh-CN', 'telegram', 'default',
-        '<b>⚠️ 订阅过期警告</b>
-
-📢 <b>{{name}}</b> 已经过期
-
-📅 过期时间: {{next_billing_date}}
-💰 金额: {{amount}} {{currency}}
-💳 支付方式: {{payment_method}}
-📋 计划: {{plan}}
-
-请尽快续订以恢复服务。'),
+      ('expiration_warning', 'en', 'telegram', 'default',
+        '<b>⚠️ Subscription Expiration Warning</b>
+    
+    📢 <b>{{name}}</b> has expired
+    
+    📅 Expiration date: {{next_billing_date}}
+    💰 Amount: {{amount}} {{currency}}
+    💳 Payment method: {{payment_method}}
+    📋 Plan: {{plan}}
+    
+    Please renew as soon as possible to restore your service.'),
       
-      ('renewal_success', 'zh-CN', 'telegram', 'default',
-        '<b>✅ 续订成功</b>
-
-📢 <b>{{name}}</b> 续订成功
-
-💰 支付金额: {{amount}} {{currency}}
-📅 新的到期时间: {{next_billing_date}}
-💳 支付方式: {{payment_method}}
-📋 计划: {{plan}}
-
-感谢您的续费！'),
+      ('renewal_success', 'en', 'telegram', 'default',
+        '<b>✅ Renewal Successful</b>
+    
+    📢 <b>{{name}}</b> has been successfully renewed
+    
+    💰 Payment amount: {{amount}} {{currency}}
+    📅 New expiration date: {{next_billing_date}}
+    💳 Payment method: {{payment_method}}
+    📋 Plan: {{plan}}
+    
+    Thank you for your renewal!'),
       
-      ('renewal_failure', 'zh-CN', 'telegram', 'default',
-        '<b>❌ 续订失败</b>
-
-📢 <b>{{name}}</b> 续订失败
-
-💰 金额: {{amount}} {{currency}}
-📅 计划续订时间: {{next_billing_date}}
-💳 支付方式: {{payment_method}}
-📋 计划: {{plan}}
-
-请检查支付方式并手动续订。'),
+      ('renewal_failure', 'en', 'telegram', 'default',
+        '<b>❌ Renewal Failed</b>
+    
+    📢 <b>{{name}}</b> renewal failed
+    
+    💰 Amount: {{amount}} {{currency}}
+    📅 Scheduled renewal date: {{next_billing_date}}
+    💳 Payment method: {{payment_method}}
+    📋 Plan: {{plan}}
+    
+    Please check your payment method and renew manually.'),
       
-      ('subscription_change', 'zh-CN', 'telegram', 'default',
-        '<b>📝 订阅变更</b>
-
-📢 <b>{{name}}</b> 信息已更新
-
-📋 计划: {{plan}}
-💰 金额: {{amount}} {{currency}}
-📅 下次付款: {{next_billing_date}}
-💳 支付方式: {{payment_method}}
-
-变更已生效。');
+      ('subscription_change', 'en', 'telegram', 'default',
+        '<b>📝 Subscription Change</b>
+    
+    📢 <b>{{name}}</b> information has been updated
+    
+    📋 Plan: {{plan}}
+    💰 Amount: {{amount}} {{currency}}
+    📅 Next payment: {{next_billing_date}}
+    💳 Payment method: {{payment_method}}
+    
+    The change has taken effect.');
     `);
+    
 
     console.log('✅ Notification tables created successfully (telegram)');
   }
