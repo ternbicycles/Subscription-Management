@@ -28,7 +28,6 @@ function createProtectedNotificationRoutes(db) {
     // 通知操作路由
     router.post('/send', notificationController.sendNotification);
     router.post('/test/:userId', notificationController.testNotification);
-    router.post('/retry/:id', notificationController.retryNotification);
 
     // 历史记录路由
     router.get('/history/:userId', notificationController.getNotificationHistory);

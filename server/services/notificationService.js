@@ -76,36 +76,34 @@ class NotificationService {
                 language: 'zh-CN'
             });
 
-            // 创建通知记录
-            const notificationRecord = this.createNotificationRecord({
-                userId,
-                subscriptionId: subscription.id,
-                notificationType,
-                channelType: channel,
-                recipient: this.getRecipient(channelConfig),
-                messageContent,
-                scheduledAt: new Date()
-            });
+            const recipient = this.getRecipient(channelConfig);
+            const sendTime = new Date();
 
             // 发送通知
             let sendResult;
             switch (channel) {
                 case 'telegram':
                     sendResult = await this.telegramService.sendMessage(
-                        this.getRecipient(channelConfig),
+                        recipient,
                         messageContent
                     );
                     break;
                 default:
-                    throw new Error(`Unsupported channel: ${channel}`);
+                    sendResult = { success: false, error: `Unsupported channel: ${channel}` };
             }
 
-            // 更新通知记录状态
-            this.updateNotificationStatus(
-                notificationRecord.id,
-                sendResult.success ? 'sent' : 'failed',
-                sendResult.error
-            );
+            // 直接创建最终状态的通知记录
+            const notificationRecord = this.createNotificationRecord({
+                userId,
+                subscriptionId: subscription.id,
+                notificationType,
+                channelType: channel,
+                recipient,
+                messageContent,
+                status: sendResult.success ? 'sent' : 'failed',
+                sentAt: sendResult.success ? sendTime : null,
+                errorMessage: sendResult.error || null
+            });
 
             // 更新渠道最后使用时间
             this.updateChannelLastUsed(userId, channel);
@@ -305,17 +303,19 @@ class NotificationService {
         try {
             const query = `
                 INSERT INTO notification_history 
-                (user_id, subscription_id, notification_type, channel_type, status, recipient, message_content, scheduled_at)
-                VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
+                (user_id, subscription_id, notification_type, channel_type, status, recipient, message_content, sent_at, error_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             const result = this.db.prepare(query).run(
                 data.userId,
                 data.subscriptionId,
                 data.notificationType,
                 data.channelType,
+                data.status, // 'sent' or 'failed'
                 data.recipient,
                 data.messageContent,
-                data.scheduledAt.toISOString()
+                data.sentAt ? data.sentAt.toISOString() : null,
+                data.errorMessage || null
             );
             return { id: result.lastInsertRowid, ...data };
         } catch (error) {
@@ -324,24 +324,7 @@ class NotificationService {
         }
     }
 
-    /**
-     * 更新通知状态
-     * @param {number} notificationId - 通知ID
-     * @param {string} status - 状态
-     * @param {string} errorMessage - 错误消息
-     */
-    updateNotificationStatus(notificationId, status, errorMessage = null) {
-        try {
-            const query = `
-                UPDATE notification_history 
-                SET status = ?, error_message = ?, sent_at = CASE WHEN ? = 'sent' THEN CURRENT_TIMESTAMP ELSE sent_at END
-                WHERE id = ?
-            `;
-            this.db.prepare(query).run(status, errorMessage, status, notificationId);
-        } catch (error) {
-            console.error('Error updating notification status:', error);
-        }
-    }
+
 
     /**
      * 更新渠道最后使用时间

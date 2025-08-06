@@ -4,6 +4,7 @@ import {
   Settings,
   BarChart3,
   CreditCard,
+  History,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -48,6 +49,13 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Button variant={location.pathname === '/expense-reports' ? "default" : "ghost"} size="sm" className="px-2 sm:px-3">
                 <BarChart3 className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">{t('reports')}</span>
+              </Button>
+            </Link>
+
+            <Link to="/notifications">
+              <Button variant={location.pathname === '/notifications' ? "default" : "ghost"} size="sm" className="px-2 sm:px-3">
+                <History className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('notifications')}</span>
               </Button>
             </Link>
 

@@ -133,9 +133,7 @@ export const notificationApi = {
     }>(url);
   },
 
-  // 重试失败的通知
-  retryNotification: (notificationId: number) =>
-    apiClient.post<{ message: string }>(`/protected/notifications/retry/${notificationId}`),
+
 
   // 获取通知统计
   getStats: (userId: number) =>

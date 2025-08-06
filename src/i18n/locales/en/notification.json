@@ -62,6 +62,7 @@
   },
   "history": {
     "title": "Notification History",
+    "description": "View and manage all notification sending history records",
     "noHistory": "No notification history available",
     "status": "Status",
     "channel": "Channel",
@@ -74,12 +75,20 @@
     "retrySuccess": "Retry successful",
     "retryFailed": "Retry failed",
     "maxRetryReached": "Maximum retry attempts reached",
+    "filterAndSearch": "Filter and Search",
+    "searchPlaceholder": "Search notification content or recipient...",
+    "statusFilter": "Select Status",
+    "allStatuses": "All Statuses",
+    "typeFilter": "Select Type",
+    "allTypes": "All Types",
+    "channelFilter": "Select Channel",
+    "allChannels": "All Channels",
+    "recordsShown": "Showing {{count}} records (out of {{total}} total)",
+    "totalRecords": "Total {{total}} records",
 
     "statuses": {
-      "pending": "Pending",
       "sent": "Sent",
-      "failed": "Failed",
-      "retrying": "Retrying"
+      "failed": "Failed"
     }
   },
   "stats": {
@@ -87,8 +96,6 @@
     "total": "Total",
     "sent": "Sent",
     "failed": "Failed",
-    "pending": "Pending",
-    "retrying": "Retrying",
     "successRate": "Success Rate",
     "byType": "By Type",
     "byChannel": "By Channel"

@@ -221,55 +221,7 @@ class NotificationController {
         }
     };
 
-    /**
-     * 重试失败的通知
-     */
-    retryNotification = async (req, res) => {
-        try {
-            const notificationId = parseInt(req.params.id);
-            
-            // 获取通知记录
-            const db = this.notificationService.db;
-            const query = `
-                SELECT * FROM notification_history 
-                WHERE id = ? AND status IN ('failed', 'retrying')
-            `;
-            const notification = db.prepare(query).get(notificationId);
-            
-            if (!notification) {
-                return responseHelper.notFound(res, 'Notification not found or not eligible for retry');
-            }
 
-            // 检查重试次数
-            if (notification.retry_count >= notification.max_retry) {
-                return responseHelper.badRequest(res, 'Maximum retry attempts reached');
-            }
-
-            // 更新重试状态
-            db.prepare(`
-                UPDATE notification_history 
-                SET status = 'retrying', retry_count = retry_count + 1 
-                WHERE id = ?
-            `).run(notificationId);
-
-            // 重新发送通知
-            const result = await this.notificationService.sendNotification({
-                userId: notification.user_id,
-                subscriptionId: notification.subscription_id,
-                notificationType: notification.notification_type,
-                channels: [notification.channel_type]
-            });
-
-            if (result.success) {
-                responseHelper.success(res, { message: 'Notification retried successfully' });
-            } else {
-                responseHelper.error(res, result.error || 'Failed to retry notification', 400);
-            }
-        } catch (error) {
-            console.error('Error retrying notification:', error);
-            responseHelper.error(res, 'Failed to retry notification', 500);
-        }
-    };
 
     /**
      * 获取通知统计

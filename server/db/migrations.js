@@ -14,8 +14,8 @@ class DatabaseMigrations {
       },
       {
         version: 2,
-        name: 'add_notification_tables_telegram',
-        up: () => this.migration_002_add_notification_tables_telegram()
+        name: 'add_notification_system',
+        up: () => this.migration_002_add_notification_system()
       }
     ];
   }
@@ -123,9 +123,9 @@ class DatabaseMigrations {
     }
   }
 
-  // Migration 002: Add notification tables
-  migration_002_add_notification_tables_telegram() {
-    console.log('📝 Creating notification tables (telegram)...');
+  // Migration 002: Add notification system (merged version 2 and 4)
+  migration_002_add_notification_system() {
+    console.log('📝 Creating notification system...');
 
     // Create notification_settings table
     this.db.exec(`
@@ -164,7 +164,7 @@ class DatabaseMigrations {
       );
     `);
 
-    // Create notification_history table
+    // Create notification_history table with simplified status (merged from version 4)
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS notification_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -172,15 +172,10 @@ class DatabaseMigrations {
         subscription_id INTEGER NOT NULL,
         notification_type TEXT NOT NULL,
         channel_type TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending' CHECK (
-          status IN ('pending', 'sent', 'failed', 'retrying')
-        ),
+        status TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
         recipient TEXT NOT NULL,
         message_content TEXT NOT NULL,
         error_message TEXT,
-        retry_count INTEGER DEFAULT 0,
-        max_retry INTEGER DEFAULT 3,
-        scheduled_at DATETIME NOT NULL,
         sent_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE
@@ -226,9 +221,6 @@ class DatabaseMigrations {
       
       CREATE INDEX IF NOT EXISTS idx_notification_history_status 
       ON notification_history(status);
-      
-      CREATE INDEX IF NOT EXISTS idx_notification_history_scheduled 
-      ON notification_history(scheduled_at);
       
       CREATE INDEX IF NOT EXISTS idx_notification_history_created 
       ON notification_history(created_at);
@@ -315,7 +307,7 @@ class DatabaseMigrations {
     `);
     
 
-    console.log('✅ Notification tables created successfully (telegram)');
+    console.log('✅ Notification system created successfully');
   }
 
   // Helper method to parse SQL statements properly
@@ -360,6 +352,8 @@ class DatabaseMigrations {
 
     return statements;
   }
+
+
 
 
   close() {

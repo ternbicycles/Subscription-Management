@@ -10,6 +10,7 @@ const HomePage = lazy(() => import("./pages/HomePage"))
 const SubscriptionsPage = lazy(() => import("./pages/SubscriptionsPage").then(module => ({ default: module.SubscriptionsPage })))
 const SettingsPage = lazy(() => import("./pages/SettingsPage").then(module => ({ default: module.SettingsPage })))
 const ExpenseReportsPage = lazy(() => import("./pages/ExpenseReportsPage").then(module => ({ default: module.ExpenseReportsPage })))
+const NotificationHistoryPage = lazy(() => import("./pages/NotificationHistoryPage").then(module => ({ default: module.NotificationHistoryPage })))
 
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/subscriptions" element={<SubscriptionsPage />} />
             <Route path="/expense-reports" element={<ExpenseReportsPage />} />
-
+            <Route path="/notifications" element={<NotificationHistoryPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </Suspense>

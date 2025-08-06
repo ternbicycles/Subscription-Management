@@ -62,6 +62,7 @@
   },
   "history": {
     "title": "通知历史",
+    "description": "查看和管理所有通知的发送历史记录",
     "noHistory": "暂无通知记录",
     "status": "状态",
     "channel": "渠道",
@@ -74,12 +75,20 @@
     "retrySuccess": "重试成功",
     "retryFailed": "重试失败",
     "maxRetryReached": "已达到最大重试次数",
+    "filterAndSearch": "筛选和搜索",
+    "searchPlaceholder": "搜索通知内容或接收者...",
+    "statusFilter": "选择状态",
+    "allStatuses": "所有状态",
+    "typeFilter": "选择类型",
+    "allTypes": "所有类型",
+    "channelFilter": "选择渠道",
+    "allChannels": "所有渠道",
+    "recordsShown": "显示 {{count}} 条记录（总共 {{total}} 条）",
+    "totalRecords": "共 {{total}} 条记录",
 
     "statuses": {
-      "pending": "待发送",
       "sent": "已发送",
-      "failed": "发送失败",
-      "retrying": "重试中"
+      "failed": "发送失败"
     }
   },
   "stats": {
@@ -87,8 +96,6 @@
     "total": "总数",
     "sent": "已发送",
     "failed": "失败",
-    "pending": "待发送",
-    "retrying": "重试中",
     "successRate": "成功率",
     "byType": "按类型",
     "byChannel": "按渠道"
