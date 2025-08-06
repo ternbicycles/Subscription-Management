@@ -27,7 +27,8 @@ src/i18n/
     │   ├── dashboard.json
     │   ├── settings.json
     │   ├── validation.json
-    │   └── reports.json
+    │   ├── reports.json
+    │   └── notification.json
     └── zh-CN/                # 中文翻译
         ├── common.json
         ├── navigation.json
@@ -35,7 +36,8 @@ src/i18n/
         ├── dashboard.json
         ├── settings.json
         ├── validation.json
-        └── reports.json
+        ├── reports.json
+        └── notification.json
 ```
 
 ### 翻译文件说明
@@ -47,6 +49,7 @@ src/i18n/
 - **settings.json**: 设置页面相关翻译
 - **validation.json**: 表单验证消息
 - **reports.json**: 报表相关翻译
+- **notification.json**: 通知相关翻译
 
 ## 添加新语言
 

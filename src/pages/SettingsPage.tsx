@@ -43,6 +43,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { ExchangeRateManager } from "@/components/ExchangeRateManager"
 import { OptionsManager } from "@/components/subscription/OptionsManager"
+import { NotificationSettings } from "@/components/notification/NotificationSettings"
 import { useTheme } from "next-themes"
 
 export function SettingsPage() {
@@ -158,7 +159,7 @@ export function SettingsPage() {
             <TabsTrigger value="general" className="text-xs sm:text-sm px-2 sm:px-3">{t('general')}</TabsTrigger>
             <TabsTrigger value="currency" className="text-xs sm:text-sm px-2 sm:px-3">{t('currency')}</TabsTrigger>
             <TabsTrigger value="options" className="text-xs sm:text-sm px-2 sm:px-3">{t('options')}</TabsTrigger>
-
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3">{t('notifications')}</TabsTrigger>
             <TabsTrigger value="data" className="text-xs sm:text-sm px-2 sm:px-3">{t('data')}</TabsTrigger>
           </TabsList>
         </div>
@@ -203,6 +204,10 @@ export function SettingsPage() {
 
         <TabsContent value="options" className="space-y-4">
           <OptionsManager />
+        </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4">
+          <NotificationSettings userId={1} />
         </TabsContent>
    
         <TabsContent value="data" className="space-y-4">

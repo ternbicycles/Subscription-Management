@@ -10,6 +10,7 @@ import enDashboard from './locales/en/dashboard.json';
 import enSettings from './locales/en/settings.json';
 import enValidation from './locales/en/validation.json';
 import enReports from './locales/en/reports.json';
+import enNotification from './locales/en/notification.json';
 
 import zhCNCommon from './locales/zh-CN/common.json';
 import zhCNNavigation from './locales/zh-CN/navigation.json';
@@ -18,6 +19,7 @@ import zhCNDashboard from './locales/zh-CN/dashboard.json';
 import zhCNSettings from './locales/zh-CN/settings.json';
 import zhCNValidation from './locales/zh-CN/validation.json';
 import zhCNReports from './locales/zh-CN/reports.json';
+import zhCNNotification from './locales/zh-CN/notification.json';
 
 const resources = {
   en: {
@@ -28,6 +30,7 @@ const resources = {
     settings: enSettings,
     validation: enValidation,
     reports: enReports,
+    notification: enNotification,
   },
   'zh-CN': {
     common: zhCNCommon,
@@ -37,6 +40,7 @@ const resources = {
     settings: zhCNSettings,
     validation: zhCNValidation,
     reports: zhCNReports,
+    notification: zhCNNotification,
   },
 };
 
@@ -61,7 +65,7 @@ i18n
       useSuspense: true,
     },
     
-    ns: ['common', 'navigation', 'subscription', 'dashboard', 'settings', 'validation', 'reports'],
+    ns: ['common', 'navigation', 'subscription', 'dashboard', 'settings', 'validation', 'reports', 'notification'],
     defaultNS: 'common',
   });
 

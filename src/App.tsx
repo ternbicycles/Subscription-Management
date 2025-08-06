@@ -18,7 +18,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <MainLayout>
-        <Suspense fallback={<div className="flex items-center justify-center h-64">{t('app.loading')}</div>}>
+        <Suspense fallback={<div className="flex items-center justify-center h-64">{t('loading')}</div>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/subscriptions" element={<SubscriptionsPage />} />

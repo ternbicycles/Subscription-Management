@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const ExchangeRateScheduler = require('./services/exchangeRateScheduler');
 const SubscriptionRenewalScheduler = require('./services/subscriptionRenewalScheduler');
+const NotificationScheduler = require('./services/notificationScheduler');
 
 // Load environment variables from root .env file (unified configuration)
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -21,6 +22,7 @@ const { createPaymentHistoryRoutes, createProtectedPaymentHistoryRoutes } = requ
 const { createMonthlyCategorySummaryRoutes, createProtectedMonthlyCategorySummaryRoutes } = require('./routes/monthlyCategorySummary');
 const { createCategoriesRoutes, createProtectedCategoriesRoutes, createPaymentMethodsRoutes, createProtectedPaymentMethodsRoutes } = require('./routes/categoriesAndPaymentMethods');
 const { createSubscriptionRenewalSchedulerRoutes, createProtectedSubscriptionRenewalSchedulerRoutes } = require('./routes/subscriptionRenewalScheduler');
+const { createNotificationRoutes, createProtectedNotificationRoutes } = require('./routes/notifications');
 
 const app = express();
 const port = process.env.PORT || 3001; // Use PORT from environment or default to 3001
@@ -39,6 +41,10 @@ exchangeRateScheduler.start();
 // Initialize subscription maintenance scheduler
 const subscriptionRenewalScheduler = new SubscriptionRenewalScheduler(db);
 subscriptionRenewalScheduler.start();
+
+// Initialize notification scheduler
+const notificationScheduler = new NotificationScheduler();
+notificationScheduler.start();
 
 // Serve static files from the public directory (frontend build)
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -84,6 +90,10 @@ protectedApiRouter.use('/payment-methods', createProtectedPaymentMethodsRoutes(d
 
 apiRouter.use('/subscription-renewal-scheduler', createSubscriptionRenewalSchedulerRoutes(subscriptionRenewalScheduler));
 protectedApiRouter.use('/subscription-renewal-scheduler', createProtectedSubscriptionRenewalSchedulerRoutes(subscriptionRenewalScheduler));
+
+// Notification routes
+apiRouter.use('/notifications', createNotificationRoutes(db));
+protectedApiRouter.use('/notifications', createProtectedNotificationRoutes(db));
 
 // Register routers
 app.use('/api', apiRouter);

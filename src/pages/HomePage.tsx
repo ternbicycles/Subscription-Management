@@ -131,8 +131,8 @@ function HomePage() {
       }
 
       toast({
-        title: t('common.dataRefreshed') || "Data refreshed",
-        description: t('common.dataRefreshedDesc') || "Subscription data and renewals have been processed."
+        title: t('dataRefreshed') || "Data refreshed",
+        description: t('dataRefreshedDesc') || "Subscription data and renewals have been processed."
       })
     } catch (error) {
       console.error('Error refreshing data:', error)

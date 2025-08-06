@@ -1,4 +1,10 @@
 {
+  "app": {
+    "loading": "Loading..."
+  },
+  "common": {
+    "days": "days"
+  },
   "loading": "Loading...",
   "save": "Save",
   "cancel": "Cancel",

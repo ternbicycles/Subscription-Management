@@ -1,6 +1,7 @@
 const BaseRepository = require('../utils/BaseRepository');
 const { calculateLastBillingDate, calculateNextBillingDate, calculateNextBillingDateFromStart, getTodayString } = require('../utils/dateUtils');
 const MonthlyCategorySummaryService = require('./monthlyCategorySummaryService');
+const NotificationService = require('./notificationService');
 const logger = require('../utils/logger');
 const { NotFoundError } = require('../middleware/errorHandler');
 
@@ -8,6 +9,7 @@ class SubscriptionService extends BaseRepository {
     constructor(db) {
         super(db, 'subscriptions');
         this.monthlyCategorySummaryService = new MonthlyCategorySummaryService(db.name);
+        this.notificationService = new NotificationService();
     }
 
     /**
@@ -297,6 +299,18 @@ class SubscriptionService extends BaseRepository {
             } catch (error) {
                 logger.error(`Failed to regenerate payment history for subscription ${id}:`, error.message);
             }
+        }
+
+        // 发送订阅变更通知
+        try {
+            await this.notificationService.sendNotification({
+                userId: 1, // 默认用户ID，在多用户系统中应该从context获取
+                subscriptionId: id,
+                notificationType: 'subscription_change'
+            });
+            logger.info(`Subscription change notification sent for subscription ${id}`);
+        } catch (error) {
+            logger.error(`Failed to send subscription change notification for subscription ${id}:`, error.message);
         }
 
         return result;
@@ -637,6 +651,9 @@ class SubscriptionService extends BaseRepository {
     close() {
         if (this.monthlyCategorySummaryService) {
             this.monthlyCategorySummaryService.close();
+        }
+        if (this.notificationService) {
+            this.notificationService.close();
         }
     }
 }

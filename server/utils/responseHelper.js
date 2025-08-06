@@ -85,13 +85,13 @@ function error(res, message = 'Internal Server Error', statusCode = 500, details
     const response = {
         success: false,
         message,
-        error: true
+        error: message
     };
-    
+
     if (details && config.isDevelopment()) {
         response.details = details;
     }
-    
+
     return res.status(statusCode).json(response);
 }
 
@@ -104,10 +104,10 @@ function validationError(res, errors) {
     const response = {
         success: false,
         message: 'Validation failed',
-        error: true,
+        error: 'Validation failed',
         errors: Array.isArray(errors) ? errors : [errors]
     };
-    
+
     return res.status(400).json(response);
 }
 
@@ -136,6 +136,15 @@ function unauthorized(res, message = 'Unauthorized access') {
  */
 function forbidden(res, message = 'Forbidden access') {
     return error(res, message, 403);
+}
+
+/**
+ * 请求错误响应
+ * @param {Object} res - Express响应对象
+ * @param {string} message - 错误消息
+ */
+function badRequest(res, message = 'Bad request') {
+    return error(res, message, 400);
 }
 
 /**
@@ -201,6 +210,7 @@ module.exports = {
     paginated,
     error,
     validationError,
+    badRequest,
     notFound,
     unauthorized,
     forbidden,

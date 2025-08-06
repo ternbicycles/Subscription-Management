@@ -76,4 +76,30 @@ export interface TranslationKeys {
     number: string;
     invalidFormat: string;
   };
+  notification: {
+    title: string;
+    notificationSettings: string;
+    notificationChannels: string;
+    notificationRules: string;
+    notificationHistory: string;
+    telegram: string;
+    email: string;
+    chatId: string;
+    chatIdHelp: string;
+    test: string;
+    testSuccess: string;
+    testFailed: string;
+    save: string;
+    validateChatId: string;
+    chatIdValid: string;
+    chatIdInvalid: string;
+    botName: string;
+    botUsername: string;
+    botStatus: string;
+    configured: string;
+    notConfigured: string;
+    enabled: string;
+    disabled: string;
+    channelsLabel: string;
+  };
 }
