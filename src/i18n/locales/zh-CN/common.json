@@ -166,5 +166,8 @@
   "loadingPayments": "正在加载支付...",
   "retry": "重试",
   "noPaymentsFoundSearch": "未找到匹配的支付记录",
-  "noPaymentRecordsFound": "未找到支付记录"
+  "noPaymentRecordsFound": "未找到支付记录",
+  "pagination": {
+    "showing": "显示第 {{start}} - {{end}} 条，共 {{total}} 条记录"
+  }
 }

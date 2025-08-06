@@ -74,6 +74,7 @@
     "retrySuccess": "重试成功",
     "retryFailed": "重试失败",
     "maxRetryReached": "已达到最大重试次数",
+
     "statuses": {
       "pending": "待发送",
       "sent": "已发送",

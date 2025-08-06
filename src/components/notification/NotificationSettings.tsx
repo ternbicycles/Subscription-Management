@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Pagination } from '@/components/ui/pagination';
 import { Loader2, RefreshCw, History, BarChart3, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { notificationApi, NotificationSetting, NotificationHistory, NotificationStats } from '@/services/notificationApi';
@@ -25,6 +26,12 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [historyPagination, setHistoryPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
 
   const loadSettings = useCallback(async () => {
     try {
@@ -46,19 +53,34 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
     }
   }, [userId, t, toast]);
 
-  const loadHistory = useCallback(async () => {
+  const loadHistory = useCallback(async (page = 1) => {
     try {
       setHistoryLoading(true);
-      const response = await notificationApi.getHistory(userId, { limit: 10 });
-      // The API client already extracts the data field, so response is the data directly
-      setHistory(Array.isArray(response?.data) ? response.data : []);
+      const response = await notificationApi.getHistory(userId, { 
+        page,
+        limit: historyPagination.limit 
+      });
+      
+      if (response?.data && response?.pagination) {
+        // Always replace data for pagination (not cumulative)
+        setHistory(response.data);
+        
+        setHistoryPagination({
+          page: response.pagination.page,
+          limit: response.pagination.limit,
+          total: response.pagination.total,
+          totalPages: Math.ceil(response.pagination.total / response.pagination.limit)
+        });
+      } else {
+        setHistory([]);
+      }
     } catch (error) {
       console.error('Failed to load notification history:', error);
       setHistory([]);
     } finally {
       setHistoryLoading(false);
     }
-  }, [userId]);
+  }, [userId, historyPagination.limit]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -74,10 +96,14 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
     }
   }, [userId]);
 
+  const handlePageChange = useCallback((page: number) => {
+    loadHistory(page);
+  }, [loadHistory]);
+
   useEffect(() => {
     loadSettings();
     loadStats();
-    loadHistory();
+    loadHistory(1);
   }, [userId, loadSettings, loadStats, loadHistory]);
 
   const updateSetting = async (updatedSetting: NotificationSetting) => {
@@ -162,36 +188,52 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
     }
 
     return (
-      <div className="space-y-2">
-        {history.map((item) => (
-          <div key={item.id} className="flex items-center justify-between p-3 border rounded">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {getStatusBadge(item.status)}
-                <Badge variant="outline">{item.channel_type}</Badge>
-                <span className="text-sm font-medium">
-                  {t(`types.${item.notification_type}`)}
-                </span>
-                {item.subscription_name && (
-                  <span className="text-sm text-muted-foreground">
-                    - {item.subscription_name}
+      <div className="space-y-4">
+        <div className="space-y-2">
+          {history.map((item) => (
+            <div key={item.id} className="flex items-center justify-between p-3 border rounded">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {getStatusBadge(item.status)}
+                  <Badge variant="outline">{item.channel_type}</Badge>
+                  <span className="text-sm font-medium">
+                    {t(`types.${item.notification_type}`)}
                   </span>
+                  {item.subscription_name && (
+                    <span className="text-sm text-muted-foreground">
+                      - {item.subscription_name}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(item.created_at).toLocaleString()}
+                </div>
+              </div>
+              <div className="text-right text-xs text-muted-foreground">
+                {item.sent_at && (
+                  <div>{new Date(item.sent_at).toLocaleString()}</div>
+                )}
+                {item.error_message && (
+                  <div className="text-red-600">{item.error_message}</div>
                 )}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {new Date(item.created_at).toLocaleString()}
-              </div>
             </div>
-            <div className="text-right text-xs text-muted-foreground">
-              {item.sent_at && (
-                <div>{new Date(item.sent_at).toLocaleString()}</div>
-              )}
-              {item.error_message && (
-                <div className="text-red-600">{item.error_message}</div>
-              )}
-            </div>
+          ))}
+        </div>
+        
+        {/* Pagination */}
+        {historyPagination.totalPages > 1 && (
+          <div className="pt-4">
+            <Pagination
+              currentPage={historyPagination.page}
+              totalPages={historyPagination.totalPages}
+              onPageChange={handlePageChange}
+              showTotal={true}
+              totalItems={historyPagination.total}
+              itemsPerPage={historyPagination.limit}
+            />
           </div>
-        ))}
+        )}
       </div>
     );
   };

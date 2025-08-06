@@ -165,5 +165,8 @@
   "loadingPayments": "Loading payments...",
   "retry": "Retry",
   "noPaymentsFoundSearch": "No payments found matching your search",
-  "noPaymentRecordsFound": "No payment records found"
+  "noPaymentRecordsFound": "No payment records found",
+  "pagination": {
+    "showing": "Showing {{start}} - {{end}} of {{total}} records"
+  }
 }

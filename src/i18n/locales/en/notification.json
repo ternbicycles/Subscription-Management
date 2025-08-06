@@ -74,6 +74,7 @@
     "retrySuccess": "Retry successful",
     "retryFailed": "Retry failed",
     "maxRetryReached": "Maximum retry attempts reached",
+
     "statuses": {
       "pending": "Pending",
       "sent": "Sent",
