@@ -143,7 +143,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
       setChatIdValid(false);
       toast({
         title: t('chatIdInvalid'),
-        description: t('errors.invalidChatId'),
+        description: t('chatIdHelp'),
         variant: 'destructive'
       });
     } finally {
@@ -237,11 +237,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
         <CardTitle className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5" />
           {t('telegram')}
-          {getStatusBadge()}
         </CardTitle>
-        <CardDescription>
-          {t('chatIdHelp')}
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Bot Info */}
@@ -310,6 +306,13 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
           )}
         </div>
 
+        {/* Help Text */}
+        <div className="text-sm text-muted-foreground space-y-1">
+          <p className="text-xs whitespace-pre-line">
+            {t('chatIdHelp')}
+          </p>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
@@ -337,15 +340,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
           </Button>
         </div>
 
-        {/* Help Text */}
-        <div className="text-sm text-muted-foreground space-y-1">
-          <p>{t('chatIdHelp')}</p>
-          <p className="text-xs">
-            1. 在Telegram中搜索 <code className="bg-muted px-1 rounded">@userinfobot</code><br/>
-            2. 发送任意消息获取您的Chat ID<br/>
-            3. 或者直接向您的Bot发送消息，然后查看Bot的更新记录
-          </p>
-        </div>
+
       </CardContent>
     </Card>
   );

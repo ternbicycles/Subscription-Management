@@ -202,7 +202,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
         <div>
           <h2 className="text-2xl font-bold">{t('notificationSettings')}</h2>
           <p className="text-muted-foreground">
-            管理您的通知偏好和渠道配置
+            {t('managePreferencesDesc')}
           </p>
         </div>
         <Button
@@ -219,7 +219,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          刷新
+          {t('refresh')}
         </Button>
       </div>
 
@@ -227,15 +227,15 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="channels" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            渠道配置
+            {t('channelConfig')}
           </TabsTrigger>
           <TabsTrigger value="rules" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            通知规则
+            {t('notificationRules')}
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
-            历史记录
+            {t('historyRecord')}
           </TabsTrigger>
         </TabsList>
 

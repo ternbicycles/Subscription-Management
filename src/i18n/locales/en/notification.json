@@ -7,7 +7,7 @@
   "telegram": "Telegram",
 
   "chatId": "Chat ID",
-  "chatIdHelp": "Search for @userinfobot in Telegram to get your Chat ID",
+  "chatIdHelp": "1. Search for @userinfobot in Telegram\n2. Send any message to get your Chat ID",
   "test": "Test",
   "testSuccess": "Test message sent successfully",
   "testFailed": "Failed to send test message",
@@ -42,6 +42,10 @@
   "updateSettingError": "Failed to update setting",
   "telegramConfigSaved": "Telegram configuration saved",
   "telegramConfigError": "Failed to save Telegram configuration",
+  "managePreferencesDesc": "Manage your notification preferences and channel configurations",
+  "refresh": "Refresh",
+  "channelConfig": "Channel Configuration",
+  "historyRecord": "History Records",
   "types": {
     "renewal_reminder": "Renewal Reminder",
     "expiration_warning": "Expiration Warning",

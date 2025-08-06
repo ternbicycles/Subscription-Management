@@ -7,7 +7,7 @@
   "telegram": "Telegram",
 
   "chatId": "Chat ID",
-  "chatIdHelp": "在Telegram中搜索 @userinfobot 获取您的Chat ID",
+  "chatIdHelp": "1. 在Telegram中搜索 @userinfobot\n2. 发送任意消息获取您的Chat ID",
   "test": "测试",
   "testSuccess": "测试消息发送成功",
   "testFailed": "测试消息发送失败",
@@ -42,6 +42,10 @@
   "updateSettingError": "更新设置失败",
   "telegramConfigSaved": "Telegram配置已保存",
   "telegramConfigError": "Telegram配置保存失败",
+  "managePreferencesDesc": "管理您的通知偏好和渠道配置",
+  "refresh": "刷新",
+  "channelConfig": "渠道配置",
+  "historyRecord": "历史记录",
   "types": {
     "renewal_reminder": "续订提醒",
     "expiration_warning": "过期警告",
