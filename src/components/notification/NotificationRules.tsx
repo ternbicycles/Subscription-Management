@@ -29,6 +29,10 @@ export const NotificationRules: React.FC<NotificationRulesProps> = ({
     onUpdate({ ...setting, advance_days: days });
   };
 
+  const handleRepeatNotificationChange = (setting: NotificationSetting, repeat: boolean) => {
+    onUpdate({ ...setting, repeat_notification: repeat });
+  };
+
   const handleChannelToggle = (setting: NotificationSetting, channel: string) => {
     const currentChannels = Array.isArray(setting.notification_channels) ? setting.notification_channels : ['telegram'];
     const channels = currentChannels.includes(channel)
@@ -61,7 +65,9 @@ export const NotificationRules: React.FC<NotificationRulesProps> = ({
   };
 
   const renderAdvanceDaysInput = (setting: NotificationSetting) => {
-    if (setting.notification_type === 'renewal_reminder' || setting.notification_type === 'expiration_warning') {
+    // Only renewal_reminder needs advance_days configuration
+    // expiration_warning is sent exactly 1 day after expiration (fixed timing)
+    if (setting.notification_type === 'renewal_reminder') {
       return (
         <div className="flex items-center gap-2">
           <Label className="text-sm whitespace-nowrap">
@@ -82,6 +88,30 @@ export const NotificationRules: React.FC<NotificationRulesProps> = ({
           <span className="text-sm text-muted-foreground">
             {t('days', { ns: 'common' })}
           </span>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderRepeatNotificationSwitch = (setting: NotificationSetting) => {
+    // Only renewal_reminder supports repeat notification setting
+    if (setting.notification_type === 'renewal_reminder') {
+      return (
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label className="text-sm">
+              {t('repeatNotification')}
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {t('repeatNotificationDescription')}
+            </p>
+          </div>
+          <Switch
+            checked={setting.repeat_notification || false}
+            onCheckedChange={(repeat) => handleRepeatNotificationChange(setting, repeat)}
+            disabled={!setting.is_enabled || loading}
+          />
         </div>
       );
     }
@@ -147,7 +177,10 @@ export const NotificationRules: React.FC<NotificationRulesProps> = ({
                 <div className="space-y-4 pl-6 border-l-2 border-muted">
                   {/* Advance Days */}
                   {renderAdvanceDaysInput(setting)}
-                  
+
+                  {/* Repeat Notification */}
+                  {renderRepeatNotificationSwitch(setting)}
+
                   {/* Channels */}
                   <div className="space-y-2">
                     <Label className="text-sm">
@@ -156,35 +189,6 @@ export const NotificationRules: React.FC<NotificationRulesProps> = ({
                     {renderChannelBadges(setting)}
                   </div>
 
-                  {/* Time Window */}
-                  <div className="space-y-2">
-                    <Label className="text-sm">
-                      {t('timeWindow')}:
-                    </Label>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Input
-                        type="time"
-                        value={setting.time_window_start}
-                        onChange={(e) => onUpdate({ 
-                          ...setting, 
-                          time_window_start: e.target.value 
-                        })}
-                        className="w-20"
-                        disabled={loading}
-                      />
-                      <span>-</span>
-                      <Input
-                        type="time"
-                        value={setting.time_window_end}
-                        onChange={(e) => onUpdate({ 
-                          ...setting, 
-                          time_window_end: e.target.value 
-                        })}
-                        className="w-20"
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
 

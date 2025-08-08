@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS settings (
     currency TEXT NOT NULL DEFAULT 'CNY',
     theme TEXT NOT NULL DEFAULT 'system' CHECK (theme IN ('light', 'dark', 'system')),
     show_original_currency BOOLEAN NOT NULL DEFAULT 1,
+    language TEXT NOT NULL DEFAULT 'zh-CN' CHECK (language IN ('zh-CN', 'en', 'ja', 'ko', 'fr', 'de', 'es')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -185,8 +186,8 @@ CREATE INDEX IF NOT EXISTS idx_monthly_category_summary_year_month_category ON m
 
 -- Insert default settings
 -- Note: Currency value should match BASE_CURRENCY from application config
-INSERT OR IGNORE INTO settings (id, currency, theme, show_original_currency)
-VALUES (1, 'CNY', 'system', 1);
+INSERT OR IGNORE INTO settings (id, currency, theme, show_original_currency, language)
+VALUES (1, 'CNY', 'system', 1, 'zh-CN');
 
 -- Insert default categories
 INSERT OR IGNORE INTO categories (value, label) VALUES

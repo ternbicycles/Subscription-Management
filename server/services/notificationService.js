@@ -1,10 +1,12 @@
 const TelegramService = require('./telegramService');
 const { createDatabaseConnection } = require('../config/database');
+const UserPreferenceService = require('./userPreferenceService');
 
 class NotificationService {
     constructor(db = null) {
         this.db = db || createDatabaseConnection();
         this.telegramService = new TelegramService();
+        this.userPreferenceService = new UserPreferenceService(this.db);
     }
 
     /**
@@ -68,12 +70,15 @@ class NotificationService {
                 return { success: false, channel, message: 'Channel not configured' };
             }
 
+            // 获取用户语言偏好
+            const userLanguage = this.userPreferenceService.getUserLanguage(userId);
+            
             // 渲染消息模板
             const messageContent = this.renderMessageTemplate({
                 subscription,
                 notificationType,
                 channel,
-                language: 'zh-CN'
+                language: userLanguage
             });
 
             const recipient = this.getRecipient(channelConfig);
@@ -256,7 +261,7 @@ class NotificationService {
     }
 
     /**
-     * 获取模板
+     * 获取模板（支持语言回退）
      * @param {string} notificationType - 通知类型
      * @param {string} language - 语言
      * @param {string} channel - 渠道
@@ -268,8 +273,28 @@ class NotificationService {
                 SELECT * FROM notification_templates 
                 WHERE notification_type = ? AND language = ? AND channel_type = ? AND is_active = 1
             `;
-            const result = this.db.prepare(query).get(notificationType, language, channel);
-            return result;
+            
+            // 尝试获取指定语言的模板
+            let result = this.db.prepare(query).get(notificationType, language, channel);
+            if (result) {
+                return result;
+            }
+            
+            // 语言回退机制
+            const fallbackLanguages = ['en', 'zh-CN']; // 回退顺序
+            
+            for (const fallbackLang of fallbackLanguages) {
+                if (fallbackLang !== language) {
+                    result = this.db.prepare(query).get(notificationType, fallbackLang, channel);
+                    if (result) {
+                        console.log(`Template fallback: ${language} -> ${fallbackLang} for ${notificationType}`);
+                        return result;
+                    }
+                }
+            }
+            
+            console.warn(`No template found for ${notificationType} in any language for channel ${channel}`);
+            return null;
         } catch (error) {
             console.error('Error getting template:', error);
             return null;

@@ -6,17 +6,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Pagination } from '@/components/ui/pagination';
 import { SearchInput } from '@/components/ui/search-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Loader2, 
-  RefreshCw, 
-  History, 
-  BarChart3, 
+import {
+  Loader2,
+  RefreshCw,
+  History,
+  BarChart3,
   Search,
   Calendar,
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { notificationApi, NotificationHistory as NotificationHistoryType, NotificationStats } from '@/services/notificationApi';
@@ -26,6 +28,71 @@ import { formatDate } from '@/utils/date';
 interface NotificationHistoryProps {
   userId: number;
 }
+
+// Helper function to parse and format message content
+const parseMessageContent = (content: string, t: any) => {
+  if (!content) return { summary: '', details: [] };
+
+  // Remove HTML tags but keep the structure
+  let text = content.replace(/<[^>]*>/g, '');
+
+  // Clean up extra whitespace but preserve line breaks
+  text = text.replace(/\s+/g, ' ').trim();
+
+  // Extract key information
+  const titleMatch = text.match(/(续订提醒|续订成功|续订失败|订阅变更|过期警告)/);
+  const title = titleMatch ? titleMatch[1] : t('history.defaultNotification');
+
+  // Try multiple patterns to extract subscription name
+  let subscriptionName = '';
+
+  // Pattern 1: Look for name after 📢 emoji (most common pattern)
+  const nameMatch1 = text.match(/📢\s+([^\s]+)\s+(?:即将到期|续订|信息已更新|已过期)/);
+  if (nameMatch1) {
+    subscriptionName = nameMatch1[1];
+  } else {
+    // Pattern 2: Look for name directly before action words
+    const nameMatch2 = text.match(/([a-zA-Z0-9_-]+)\s+(?:即将到期|续订成功|续订失败|信息已更新|已过期)/);
+    if (nameMatch2) {
+      subscriptionName = nameMatch2[1];
+    }
+  }
+
+  const amountMatch = text.match(/金额[：:\s]*([0-9.]+\s*[A-Z]{3})/);
+  const amount = amountMatch ? amountMatch[1] : '';
+
+  const dateMatch = text.match(/(?:到期日期|到期时间|过期时间)[：:\s]*(\d{4}\/\d{1,2}\/\d{1,2})/);
+  const date = dateMatch ? dateMatch[1] : '';
+
+  const paymentMatch = text.match(/支付方式[：:\s]*([^计划套餐金额到期]+?)(?:\s|计划|套餐|金额|到期|$)/);
+  const paymentMethod = paymentMatch ? paymentMatch[1].trim() : '';
+
+  const planMatch = text.match(/(?:套餐|计划)[：:\s]*([^请及时金额到期支付]+?)(?:\s|请|金额|到期|支付|$)/);
+  const plan = planMatch ? planMatch[1].trim() : '';
+
+  // Create summary - prioritize subscription name over notification type
+  let summary = '';
+  if (subscriptionName && !subscriptionName.includes('_reminder_')) {
+    summary = subscriptionName;
+  } else {
+    summary = title;
+  }
+
+  // Create details array
+  const details = [];
+  if (date) details.push({ label: t('history.expiryDate'), value: date, icon: '📅' });
+  if (amount) details.push({ label: t('history.amount'), value: amount, icon: '💰' });
+  if (paymentMethod) details.push({ label: t('history.paymentMethod'), value: paymentMethod, icon: '💳' });
+  if (plan) details.push({ label: t('history.plan'), value: plan, icon: '📋' });
+
+  // Add action message if exists
+  const actionMatch = text.match(/(请及时续订以避免服务中断|请检查您的支付方式|变更已生效)/);
+  if (actionMatch) {
+    details.push({ label: t('history.tip'), value: actionMatch[1], icon: '💡' });
+  }
+
+  return { summary, details, fullText: text };
+};
 
 export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId }) => {
   const { t } = useTranslation('notification');
@@ -45,6 +112,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
     total: 0,
     totalPages: 0
   });
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
 
   const loadHistory = useCallback(async (page = 1) => {
     try {
@@ -111,6 +179,18 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
 
   const handlePageChange = (page: number) => {
     loadHistory(page);
+  };
+
+  const toggleExpanded = (itemId: number) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
   };
 
 
@@ -331,58 +411,99 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
             </Alert>
           ) : (
             <div className="space-y-4">
-              {filteredHistory.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(item.status)}
-                      <Badge variant={getStatusVariant(item.status)}>
-                        {t(`history.statuses.${item.status}`)}
-                      </Badge>
-                      <Badge variant="outline">
-                        {t(`types.${item.notification_type}`)}
-                      </Badge>
-                      <Badge variant="secondary">
-                        {t(`channels.${item.channel_type}`)}
-                      </Badge>
-                    </div>
-                    
-                    <div>
-                      <div className="font-medium">{item.message_content.substring(0, 100)}...</div>
-                      <div className="text-sm text-muted-foreground">
-                        {t('history.recipient')}: {item.recipient}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {t('history.scheduledAt')}: {formatDate(item.scheduled_at)}
-                      </div>
-                      {item.sent_at && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {t('history.sentAt')}: {formatDate(item.sent_at)}
+              {filteredHistory.map((item) => {
+                const parsedContent = parseMessageContent(item.message_content, t);
+                const isExpanded = expandedItems.has(item.id);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="border rounded-lg hover:bg-muted/30 transition-colors bg-card"
+                  >
+                    {/* Header - always visible */}
+                    <div
+                      className="p-4 cursor-pointer"
+                      onClick={() => toggleExpanded(item.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(item.status)}
+                          <Badge variant={getStatusVariant(item.status)} className="text-xs">
+                            {t(`history.statuses.${item.status}`)}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {t(`types.${item.notification_type}`)}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {t(`channels.${item.channel_type}`)}
+                          </Badge>
                         </div>
-                      )}
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-muted-foreground">
+                            {formatDate(item.scheduled_at)}
+                          </div>
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Summary - always visible */}
+                      <div className="mt-2 text-sm font-medium text-foreground">
+                        {item.subscription_name ? `${t('history.subscription')}: ${item.subscription_name}` : (parsedContent.summary || t('history.defaultMessage'))}
+                      </div>
                     </div>
-                    
-                    {item.error_message && (
-                      <Alert className="mt-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">
-                          {item.error_message}
-                        </AlertDescription>
-                      </Alert>
+
+                    {/* Expanded content */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 border-t bg-muted/20">
+                        <div className="pt-3 space-y-3">
+                          {/* Details in vertical layout */}
+                          {parsedContent.details.length > 0 && (
+                            <div className="space-y-2">
+                              {parsedContent.details.map((detail, index) => (
+                                <div key={index} className="flex items-center gap-3 text-sm">
+                                  <span className="text-lg">{detail.icon}</span>
+                                  <span className="text-muted-foreground min-w-[80px]">{detail.label}:</span>
+                                  <span className="font-medium">{detail.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Recipient info */}
+                          <div className="flex items-center gap-3 text-sm">
+                            <span className="text-lg">📧</span>
+                            <span className="text-muted-foreground min-w-[80px]">{t('history.recipientLabel')}</span>
+                            <span className="font-mono text-xs bg-muted px-2 py-1 rounded">{item.recipient}</span>
+                          </div>
+
+                          {/* Timing info */}
+                          {item.sent_at && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <span className="text-lg">🕐</span>
+                              <span className="text-muted-foreground min-w-[80px]">{t('history.sentTimeLabel')}</span>
+                              <span className="font-medium">{formatDate(item.sent_at)}</span>
+                            </div>
+                          )}
+
+                          {/* Error message if any */}
+                          {item.error_message && (
+                            <Alert className="border-destructive/20 bg-destructive/5">
+                              <AlertCircle className="h-4 w-4 text-destructive" />
+                              <AlertDescription className="text-sm text-destructive">
+                                {item.error_message}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-                  
-
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

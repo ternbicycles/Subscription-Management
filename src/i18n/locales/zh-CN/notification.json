@@ -27,13 +27,12 @@
   "enabled": "启用",
   "disabled": "禁用",
   "advanceDays": "提前天数",
+  "repeatNotification": "重复通知",
+  "repeatNotificationDescription": "在提前期内每天发送提醒",
   "channelsLabel": "渠道",
   "channels": {
     "telegram": "Telegram"
   },
-  "timeWindow": "时间窗口",
-  "timeWindowStart": "开始时间",
-  "timeWindowEnd": "结束时间",
   "sendTest": "发送测试消息",
   "settingsUpdated": "设置已更新",
   "settingsUpdateError": "设置更新失败",
@@ -85,6 +84,16 @@
     "allChannels": "所有渠道",
     "recordsShown": "显示 {{count}} 条记录（总共 {{total}} 条）",
     "totalRecords": "共 {{total}} 条记录",
+    "subscription": "订阅",
+    "defaultNotification": "通知",
+    "defaultMessage": "通知消息",
+    "expiryDate": "到期日期",
+    "amount": "金额",
+    "paymentMethod": "支付方式",
+    "plan": "套餐",
+    "tip": "提示",
+    "recipientLabel": "接收方:",
+    "sentTimeLabel": "发送时间:",
 
     "statuses": {
       "sent": "已发送",
@@ -99,6 +108,46 @@
     "successRate": "成功率",
     "byType": "按类型",
     "byChannel": "按渠道"
+  },
+  "scheduler": {
+    "title": "定时任务",
+    "settings": "定时任务设置",
+    "description": "配置通知检查的定时任务，系统将在指定时间自动检查并发送通知",
+    "currentStatus": "当前状态",
+    "enableScheduler": "启用定时任务",
+    "enableDescription": "启用后系统将按设定时间自动检查通知",
+    "checkTime": "检查时间",
+    "checkTimeDescription": "系统将在每天的这个时间检查并发送通知",
+    "timezone": "时区",
+    "saveSettings": "保存设置",
+    "saving": "保存中...",
+    "manualTrigger": "手动触发检查",
+    "disabledWarning": "定时任务已禁用",
+    "disabledWarningDescription": "启用后系统将按设定时间自动检查并发送通知",
+    "loading": "加载中...",
+    "status": {
+      "disabled": "已禁用",
+      "running": "运行中",
+      "stopped": "已停止"
+    },
+    "timezones": {
+      "Asia/Shanghai": "北京时间 (UTC+8)",
+      "Asia/Tokyo": "东京时间 (UTC+9)",
+      "Asia/Seoul": "首尔时间 (UTC+9)",
+      "Asia/Hong_Kong": "香港时间 (UTC+8)",
+      "America/New_York": "纽约时间 (UTC-5/-4)",
+      "America/Los_Angeles": "洛杉矶时间 (UTC-8/-7)",
+      "Europe/London": "伦敦时间 (UTC+0/+1)",
+      "Europe/Paris": "巴黎时间 (UTC+1/+2)",
+      "UTC": "UTC 时间"
+    },
+    "messages": {
+      "loadFailed": "加载调度器设置失败",
+      "updateSuccess": "调度器设置已更新",
+      "updateFailed": "更新调度器设置失败",
+      "triggerSuccess": "已手动触发通知检查",
+      "triggerFailed": "触发通知检查失败"
+    }
   },
   "errors": {
     "telegramNotConfigured": "Telegram机器人未配置",

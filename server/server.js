@@ -23,6 +23,8 @@ const { createMonthlyCategorySummaryRoutes, createProtectedMonthlyCategorySummar
 const { createCategoriesRoutes, createProtectedCategoriesRoutes, createPaymentMethodsRoutes, createProtectedPaymentMethodsRoutes } = require('./routes/categoriesAndPaymentMethods');
 const { createSubscriptionRenewalSchedulerRoutes, createProtectedSubscriptionRenewalSchedulerRoutes } = require('./routes/subscriptionRenewalScheduler');
 const { createNotificationRoutes, createProtectedNotificationRoutes } = require('./routes/notifications');
+const { createSchedulerRoutes, createProtectedSchedulerRoutes } = require('./routes/scheduler');
+const userPreferencesRoutes = require('./routes/userPreferences');
 
 const app = express();
 const port = process.env.PORT || 3001; // Use PORT from environment or default to 3001
@@ -94,6 +96,13 @@ protectedApiRouter.use('/subscription-renewal-scheduler', createProtectedSubscri
 // Notification routes
 apiRouter.use('/notifications', createNotificationRoutes(db));
 protectedApiRouter.use('/notifications', createProtectedNotificationRoutes(db));
+
+// Scheduler routes
+apiRouter.use('/scheduler', createSchedulerRoutes(notificationScheduler));
+protectedApiRouter.use('/scheduler', createProtectedSchedulerRoutes(notificationScheduler));
+
+// User preferences routes
+apiRouter.use('/user-preferences', userPreferencesRoutes);
 
 // Register routers
 app.use('/api', apiRouter);

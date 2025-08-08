@@ -61,22 +61,31 @@ class NotificationController {
     updateSetting = (req, res) => {
         try {
             const settingId = parseInt(req.params.id);
-            const { is_enabled, advance_days, notification_channels, time_window_start, time_window_end } = req.body;
+            const { is_enabled, advance_days, notification_channels, repeat_notification } = req.body;
 
             const db = this.notificationService.db;
+
+            // First get the current setting to check notification type
+            const currentSetting = db.prepare('SELECT notification_type FROM notification_settings WHERE id = ?').get(settingId);
+
+            if (!currentSetting) {
+                return responseHelper.notFound(res, 'Notification setting not found');
+            }
+
+            // For expiration_warning, always keep advance_days as 0 (fixed timing)
+            const finalAdvanceDays = currentSetting.notification_type === 'expiration_warning' ? 0 : advance_days;
+
             const query = `
-                UPDATE notification_settings 
-                SET is_enabled = ?, advance_days = ?, notification_channels = ?, 
-                    time_window_start = ?, time_window_end = ?, updated_at = CURRENT_TIMESTAMP
+                UPDATE notification_settings
+                SET is_enabled = ?, advance_days = ?, notification_channels = ?, repeat_notification = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             `;
-            
+
             const result = db.prepare(query).run(
                 is_enabled ? 1 : 0, // Convert boolean to integer for SQLite
-                advance_days,
+                finalAdvanceDays,
                 JSON.stringify(notification_channels || ['telegram']),
-                time_window_start,
-                time_window_end,
+                repeat_notification ? 1 : 0, // Convert boolean to integer for SQLite
                 settingId
             );
 

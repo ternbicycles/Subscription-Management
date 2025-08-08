@@ -8,6 +8,7 @@ import { notificationApi, NotificationSetting } from '@/services/notificationApi
 import { useToast } from '@/hooks/use-toast';
 import { TelegramConfig } from './TelegramConfig';
 import { NotificationRules } from './NotificationRules';
+import { SchedulerSettings } from './SchedulerSettings';
 
 interface NotificationSettingsProps {
   userId: number;
@@ -91,7 +92,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
       </div>
 
       <Tabs defaultValue="channels" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="channels" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             {t('channelConfig')}
@@ -99,6 +100,10 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
           <TabsTrigger value="rules" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             {t('notificationRules')}
+          </TabsTrigger>
+          <TabsTrigger value="scheduler" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            {t('scheduler.title')}
           </TabsTrigger>
         </TabsList>
 
@@ -114,7 +119,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
             <CardHeader>
               <CardTitle>{t('notificationRules')}</CardTitle>
               <CardDescription>
-                配置您希望接收的通知类型和发送方式
+                {t('managePreferencesDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -125,6 +130,10 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="scheduler" className="space-y-6">
+          <SchedulerSettings />
         </TabsContent>
       </Tabs>
     </div>

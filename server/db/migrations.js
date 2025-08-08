@@ -16,6 +16,16 @@ class DatabaseMigrations {
         version: 2,
         name: 'add_notification_system',
         up: () => this.migration_002_add_notification_system()
+      },
+      {
+        version: 3,
+        name: 'add_scheduler_settings',
+        up: () => this.migration_003_add_scheduler_settings()
+      },
+      {
+        version: 4,
+        name: 'add_repeat_notification_setting',
+        up: () => this.migration_004_add_repeat_notification_setting()
       }
     ];
   }
@@ -127,6 +137,18 @@ class DatabaseMigrations {
   migration_002_add_notification_system() {
     console.log('📝 Creating notification system...');
 
+    // Add language preference to settings table
+    console.log('📝 Adding language preference to settings...');
+    try {
+      this.db.exec(`
+        ALTER TABLE settings ADD COLUMN language TEXT NOT NULL DEFAULT 'zh-CN' 
+        CHECK (language IN ('zh-CN', 'en', 'ja', 'ko', 'fr', 'de', 'es'));
+      `);
+    } catch (error) {
+      // Column might already exist, ignore error
+      console.log('Language column might already exist, continuing...');
+    }
+
     // Create notification_settings table
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS notification_settings (
@@ -141,8 +163,6 @@ class DatabaseMigrations {
         is_enabled BOOLEAN NOT NULL DEFAULT 1,
         advance_days INTEGER DEFAULT 7,
         notification_channels TEXT NOT NULL DEFAULT '["telegram"]',
-        time_window_start TEXT DEFAULT '09:00',
-        time_window_end TEXT DEFAULT '22:00',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(user_id, notification_type)
@@ -236,7 +256,7 @@ class DatabaseMigrations {
     this.db.exec(`
       INSERT OR IGNORE INTO notification_settings (user_id, notification_type, is_enabled, advance_days, notification_channels) VALUES
       (1, 'renewal_reminder', 1, 7, '["telegram"]'),
-      (1, 'expiration_warning', 1, 1, '["telegram"]'),
+      (1, 'expiration_warning', 1, 0, '["telegram"]'),
       (1, 'renewal_success', 1, 0, '["telegram"]'),
       (1, 'renewal_failure', 1, 0, '["telegram"]'),
       (1, 'subscription_change', 1, 0, '["telegram"]');
@@ -303,11 +323,135 @@ class DatabaseMigrations {
     📅 Next payment: {{next_billing_date}}
     💳 Payment method: {{payment_method}}
     
-    The change has taken effect.');
+    The change has taken effect.'),
+    
+    -- Chinese (Simplified) templates
+    ('renewal_reminder', 'zh-CN', 'telegram', 'default', 
+      '<b>续订提醒</b>
+
+📢 <b>{{name}}</b> 即将到期
+
+📅 到期日期: {{next_billing_date}}
+💰 金额: {{amount}} {{currency}}
+💳 支付方式: {{payment_method}}
+📋 套餐: {{plan}}
+
+请及时续订以避免服务中断。'),
+    
+    ('expiration_warning', 'zh-CN', 'telegram', 'default',
+      '<b>⚠️ 订阅过期警告</b>
+
+📢 <b>{{name}}</b> 已经过期
+
+📅 过期日期: {{next_billing_date}}
+💰 金额: {{amount}} {{currency}}
+💳 支付方式: {{payment_method}}
+📋 套餐: {{plan}}
+
+请尽快续订以恢复服务。'),
+    
+    ('renewal_success', 'zh-CN', 'telegram', 'default',
+      '<b>✅ 续订成功</b>
+
+📢 <b>{{name}}</b> 续订成功
+
+💰 支付金额: {{amount}} {{currency}}
+📅 新的到期日期: {{next_billing_date}}
+💳 支付方式: {{payment_method}}
+📋 套餐: {{plan}}
+
+感谢您的续订！'),
+    
+    ('renewal_failure', 'zh-CN', 'telegram', 'default',
+      '<b>❌ 续订失败</b>
+
+📢 <b>{{name}}</b> 续订失败
+
+💰 金额: {{amount}} {{currency}}
+📅 计划续订日期: {{next_billing_date}}
+💳 支付方式: {{payment_method}}
+📋 套餐: {{plan}}
+
+请检查您的支付方式并手动续订。'),
+    
+    ('subscription_change', 'zh-CN', 'telegram', 'default',
+      '<b>📝 订阅变更</b>
+
+📢 <b>{{name}}</b> 信息已更新
+
+📋 套餐: {{plan}}
+💰 金额: {{amount}} {{currency}}
+📅 下次付款: {{next_billing_date}}
+💳 支付方式: {{payment_method}}
+
+变更已生效。');
     `);
     
 
     console.log('✅ Notification system created successfully');
+  }
+
+  // Migration 003: Add scheduler settings table
+  migration_003_add_scheduler_settings() {
+    console.log('📝 Creating scheduler settings table...');
+
+    // Create scheduler_settings table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS scheduler_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL DEFAULT 1,
+        notification_check_time TEXT NOT NULL DEFAULT '09:00',
+        timezone TEXT NOT NULL DEFAULT 'Asia/Shanghai',
+        is_enabled BOOLEAN NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id)
+      );
+    `);
+
+    // Create trigger for scheduler_settings table
+    this.db.exec(`
+      CREATE TRIGGER IF NOT EXISTS scheduler_settings_updated_at
+      AFTER UPDATE ON scheduler_settings
+      FOR EACH ROW
+      BEGIN
+          UPDATE scheduler_settings SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+      END;
+    `);
+
+    // Insert default scheduler settings
+    this.db.exec(`
+      INSERT OR IGNORE INTO scheduler_settings (user_id, notification_check_time, timezone, is_enabled)
+      VALUES (1, '09:00', 'Asia/Shanghai', 1);
+    `);
+
+    console.log('✅ Scheduler settings table created successfully!');
+  }
+
+  // Migration 004: Add repeat notification setting
+  migration_004_add_repeat_notification_setting() {
+    console.log('📝 Adding repeat notification setting...');
+
+    // Add repeat_notification column to notification_settings table
+    try {
+      this.db.exec(`
+        ALTER TABLE notification_settings
+        ADD COLUMN repeat_notification BOOLEAN NOT NULL DEFAULT 0;
+      `);
+      console.log('✅ Added repeat_notification column');
+    } catch (error) {
+      // Column might already exist, ignore error
+      console.log('repeat_notification column might already exist, continuing...');
+    }
+
+    // Update renewal_reminder to allow repeat notifications by default
+    this.db.exec(`
+      UPDATE notification_settings
+      SET repeat_notification = 1
+      WHERE notification_type = 'renewal_reminder';
+    `);
+
+    console.log('✅ Repeat notification setting added successfully!');
   }
 
   // Helper method to parse SQL statements properly

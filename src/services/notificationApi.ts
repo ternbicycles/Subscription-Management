@@ -7,8 +7,7 @@ export interface NotificationSetting {
   is_enabled: boolean;
   advance_days: number;
   notification_channels: string[];
-  time_window_start: string;
-  time_window_end: string;
+  repeat_notification: boolean;
   created_at: string;
   updated_at: string;
 }
