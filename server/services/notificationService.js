@@ -240,7 +240,7 @@ class NotificationService {
                 plan: subscription.plan,
                 amount: subscription.amount,
                 currency: subscription.currency,
-                next_billing_date: this.formatDate(subscription.next_billing_date),
+                next_billing_date: this.formatDate(subscription.next_billing_date, language),
                 payment_method: subscription.payment_method_label || subscription.payment_method_id,
                 status: subscription.status,
                 billing_cycle: subscription.billing_cycle
@@ -386,11 +386,16 @@ class NotificationService {
      * @param {string} dateString - 日期字符串
      * @returns {string} 格式化后的日期
      */
-    formatDate(dateString) {
-        if (!dateString) return '未知日期';
+    formatDate(dateString, language = 'zh-CN') {
         try {
+            if (!dateString) {
+                const locale = language || 'zh-CN';
+                return locale.startsWith('en') ? 'Unknown date' : '未知日期';
+            }
+
             const date = new Date(dateString);
-            return date.toLocaleDateString('zh-CN');
+            const locale = language || 'zh-CN';
+            return date.toLocaleDateString(locale);
         } catch (error) {
             return dateString;
         }

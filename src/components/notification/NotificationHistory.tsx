@@ -29,64 +29,65 @@ interface NotificationHistoryProps {
   userId: number;
 }
 
-// Helper function to parse and format message content
+// Helper function to parse and format message content (supports zh-CN and en templates)
 const parseMessageContent = (content: string, t: any) => {
   if (!content) return { summary: '', details: [] };
 
-  // Remove HTML tags but keep the structure
-  let text = content.replace(/<[^>]*>/g, '');
-
-  // Clean up extra whitespace but preserve line breaks
-  text = text.replace(/\s+/g, ' ').trim();
+  // Remove HTML tags but preserve line breaks
+  let text = content.replace(/<br\s*\/?>(?=\n)?/gi, '\n');
+  text = text.replace(/<[^>]*>/g, '');
+  // Normalize whitespace but KEEP newlines
+  text = text
+    .replace(/\r/g, '')
+    .replace(/[\t ]+/g, ' ')
+    .replace(/\n{2,}/g, '\n')
+    .trim();
 
   // Extract key information
-  const titleMatch = text.match(/(续订提醒|续订成功|续订失败|订阅变更|过期警告)/);
+  const titleMatch = text.match(/(续订提醒|续订成功|续订失败|订阅变更|过期警告|Renewal Reminder|Subscription Expiration Warning|Renewal Successful|Renewal Failed|Subscription Change)/i);
   const title = titleMatch ? titleMatch[1] : t('history.defaultNotification');
 
   // Try multiple patterns to extract subscription name
   let subscriptionName = '';
 
-  // Pattern 1: Look for name after 📢 emoji (most common pattern)
-  const nameMatch1 = text.match(/📢\s+([^\s]+)\s+(?:即将到期|续订|信息已更新|已过期)/);
+  // Pattern 1: after 📢 emoji
+  const nameMatch1 = text.match(/📢\s+([^\s]+)\s+(?:即将到期|续订|信息已更新|已过期|is about to expire|has expired|has been successfully renewed|renewal failed|information has been updated)/i);
   if (nameMatch1) {
     subscriptionName = nameMatch1[1];
   } else {
-    // Pattern 2: Look for name directly before action words
-    const nameMatch2 = text.match(/([a-zA-Z0-9_-]+)\s+(?:即将到期|续订成功|续订失败|信息已更新|已过期)/);
-    if (nameMatch2) {
-      subscriptionName = nameMatch2[1];
-    }
+    // Pattern 2: generic before action words
+    const nameMatch2 = text.match(/([a-zA-Z0-9_\-\.]+)\s+(?:即将到期|续订成功|续订失败|信息已更新|已过期|is about to expire|has expired|has been successfully renewed|renewal failed|information has been updated)/i);
+    if (nameMatch2) subscriptionName = nameMatch2[1];
   }
 
-  const amountMatch = text.match(/金额[：:\s]*([0-9.]+\s*[A-Z]{3})/);
+  // Amount
+  const amountMatch = text.match(/(?:金额|Amount)[：:\s]*([0-9.]+\s*[A-Z]{3})/i);
   const amount = amountMatch ? amountMatch[1] : '';
 
-  const dateMatch = text.match(/(?:到期日期|到期时间|过期时间)[：:\s]*(\d{4}\/\d{1,2}\/\d{1,2})/);
+  // Date (accept yyyy-mm-dd or yyyy/mm/dd)
+  const dateMatch = text.match(/(?:到期日期|到期时间|过期时间|Expiration date|Next payment|Scheduled renewal date)[：:\s]*(\d{4}[\/-]\d{1,2}[\/-]\d{1,2})/i);
   const date = dateMatch ? dateMatch[1] : '';
 
-  const paymentMatch = text.match(/支付方式[：:\s]*([^计划套餐金额到期]+?)(?:\s|计划|套餐|金额|到期|$)/);
+  // Payment method
+  const paymentMatch = text.match(/(?:支付方式|Payment method)[：:\s]*([^\n]+)/i);
   const paymentMethod = paymentMatch ? paymentMatch[1].trim() : '';
 
-  const planMatch = text.match(/(?:套餐|计划)[：:\s]*([^请及时金额到期支付]+?)(?:\s|请|金额|到期|支付|$)/);
+  // Plan
+  const planMatch = text.match(/(?:套餐|计划|Plan)[：:\s]*([^\n]+)/i);
   const plan = planMatch ? planMatch[1].trim() : '';
 
   // Create summary - prioritize subscription name over notification type
-  let summary = '';
-  if (subscriptionName && !subscriptionName.includes('_reminder_')) {
-    summary = subscriptionName;
-  } else {
-    summary = title;
-  }
+  const summary = subscriptionName && !subscriptionName.includes('_reminder_') ? subscriptionName : title;
 
   // Create details array
-  const details = [];
+  const details: Array<{ label: string; value: string; icon: string }> = [];
   if (date) details.push({ label: t('history.expiryDate'), value: date, icon: '📅' });
   if (amount) details.push({ label: t('history.amount'), value: amount, icon: '💰' });
   if (paymentMethod) details.push({ label: t('history.paymentMethod'), value: paymentMethod, icon: '💳' });
   if (plan) details.push({ label: t('history.plan'), value: plan, icon: '📋' });
 
-  // Add action message if exists
-  const actionMatch = text.match(/(请及时续订以避免服务中断|请检查您的支付方式|变更已生效)/);
+  // Action/tip
+  const actionMatch = text.match(/(请及时续订以避免服务中断|请检查您的支付方式并手动续订|变更已生效|Please renew in time to avoid service interruption|Please check your payment method|The change has taken effect)/i);
   if (actionMatch) {
     details.push({ label: t('history.tip'), value: actionMatch[1], icon: '💡' });
   }
