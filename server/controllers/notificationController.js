@@ -1,6 +1,12 @@
 const NotificationService = require('../services/notificationService');
 const TelegramService = require('../services/telegramService');
 const responseHelper = require('../utils/responseHelper');
+const {
+    validateNotificationSetting,
+    validateChannelConfig,
+    validateSendNotification,
+    createValidator
+} = require('../utils/validator');
 
 class NotificationController {
     constructor() {
@@ -61,8 +67,26 @@ class NotificationController {
     updateSetting = (req, res) => {
         try {
             const settingId = parseInt(req.params.id);
-            const { is_enabled, advance_days, notification_channels, repeat_notification } = req.body;
+            const updateData = req.body;
 
+            // 验证输入数据
+            const validator = createValidator();
+            validator
+                .boolean(updateData.is_enabled, 'is_enabled')
+                .integer(updateData.advance_days, 'advance_days')
+                .range(updateData.advance_days, 'advance_days', 0, 365)
+                .array(updateData.notification_channels, 'notification_channels')
+                .custom(updateData.notification_channels, 'notification_channels',
+                    (channels) => !channels || channels.every(channel => ['telegram', 'email', 'webhook'].includes(channel)),
+                    'notification_channels must contain only valid channel types: telegram, email, webhook'
+                )
+                .boolean(updateData.repeat_notification, 'repeat_notification');
+
+            if (validator.hasErrors()) {
+                return responseHelper.badRequest(res, validator.getErrors());
+            }
+
+            const { is_enabled, advance_days, notification_channels, repeat_notification } = updateData;
             const db = this.notificationService.db;
 
             // First get the current setting to check notification type
@@ -106,14 +130,17 @@ class NotificationController {
     configureChannel = async (req, res) => {
         try {
             const userId = parseInt(req.params.userId) || 1;
-            const { channel_type, config } = req.body;
+            const channelData = req.body;
 
-            if (!channel_type || !config) {
-                return responseHelper.badRequest(res, 'Channel type and config are required');
+            // 验证输入数据
+            const validator = validateChannelConfig(channelData);
+            if (validator.hasErrors()) {
+                return responseHelper.badRequest(res, validator.getErrors());
             }
 
+            const { channel_type, config } = channelData;
             const result = await this.notificationService.configureChannel(userId, channel_type, config);
-            
+
             if (result.success) {
                 responseHelper.success(res, result);
             } else {
@@ -154,12 +181,19 @@ class NotificationController {
             const userId = parseInt(req.params.userId) || 1;
             const { channel_type } = req.body;
 
-            if (!channel_type) {
-                return responseHelper.badRequest(res, 'Channel type is required');
+            // 验证输入数据
+            const validator = createValidator();
+            validator
+                .required(channel_type, 'channel_type')
+                .string(channel_type, 'channel_type')
+                .enum(channel_type, 'channel_type', ['telegram', 'email', 'webhook']);
+
+            if (validator.hasErrors()) {
+                return responseHelper.badRequest(res, validator.getErrors());
             }
 
             const result = await this.notificationService.testNotification(userId, channel_type);
-            
+
             if (result.success) {
                 responseHelper.success(res, result);
             } else {
@@ -176,11 +210,15 @@ class NotificationController {
      */
     sendNotification = async (req, res) => {
         try {
-            const { user_id, subscription_id, notification_type, channels } = req.body;
+            const notificationData = req.body;
 
-            if (!subscription_id || !notification_type) {
-                return responseHelper.badRequest(res, 'Subscription ID and notification type are required');
+            // 验证输入数据
+            const validator = validateSendNotification(notificationData);
+            if (validator.hasErrors()) {
+                return responseHelper.badRequest(res, validator.getErrors());
             }
+
+            const { user_id, subscription_id, notification_type, channels } = notificationData;
 
             const result = await this.notificationService.sendNotification({
                 userId: user_id || 1,
@@ -312,12 +350,22 @@ class NotificationController {
         try {
             const { chat_id } = req.body;
 
-            if (!chat_id) {
-                return responseHelper.badRequest(res, 'Chat ID is required');
+            // 验证输入数据
+            const validator = createValidator();
+            validator
+                .required(chat_id, 'chat_id')
+                .string(chat_id, 'chat_id')
+                .custom(chat_id, 'chat_id',
+                    (chatId) => /^-?\d+$/.test(chatId),
+                    'Chat ID must be a valid number string'
+                );
+
+            if (validator.hasErrors()) {
+                return responseHelper.badRequest(res, validator.getErrors());
             }
 
             const result = await this.telegramService.validateChatId(chat_id);
-            
+
             if (result.success) {
                 responseHelper.success(res, result);
             } else {

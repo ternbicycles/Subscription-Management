@@ -356,9 +356,118 @@ function validateSubscriptionWithForeignKeys(data, db) {
     return validator;
 }
 
+/**
+ * 验证通知设置数据
+ * @param {Object} data - 通知设置数据
+ * @returns {Validator}
+ */
+function validateNotificationSetting(data) {
+    const validator = createValidator();
+
+    validator
+        .required(data.notification_type, 'notification_type')
+        .string(data.notification_type, 'notification_type')
+        .enum(data.notification_type, 'notification_type', [
+            'renewal_reminder',
+            'expiration_warning',
+            'payment_failed',
+            'trial_ending'
+        ])
+
+        .boolean(data.is_enabled, 'is_enabled')
+
+        .integer(data.advance_days, 'advance_days')
+        .range(data.advance_days, 'advance_days', 0, 365)
+
+        .array(data.notification_channels, 'notification_channels')
+        .custom(data.notification_channels, 'notification_channels',
+            (channels) => channels && channels.every(channel => ['telegram', 'email', 'webhook'].includes(channel)),
+            'notification_channels must contain only valid channel types: telegram, email, webhook'
+        )
+
+        .boolean(data.repeat_notification, 'repeat_notification');
+
+    return validator;
+}
+
+/**
+ * 验证通知渠道配置数据
+ * @param {Object} data - 渠道配置数据
+ * @returns {Validator}
+ */
+function validateChannelConfig(data) {
+    const validator = createValidator();
+
+    validator
+        .required(data.channel_type, 'channel_type')
+        .string(data.channel_type, 'channel_type')
+        .enum(data.channel_type, 'channel_type', ['telegram', 'email', 'webhook'])
+
+        .required(data.config, 'config')
+        .object(data.config, 'config');
+
+    // 根据渠道类型验证具体配置
+    if (data.channel_type === 'telegram' && data.config) {
+        validator
+            .required(data.config.chat_id, 'config.chat_id')
+            .string(data.config.chat_id, 'config.chat_id')
+            .custom(data.config.chat_id, 'config.chat_id',
+                (chatId) => /^-?\d+$/.test(chatId),
+                'Telegram chat_id must be a valid number string'
+            );
+    } else if (data.channel_type === 'email' && data.config) {
+        validator
+            .required(data.config.email, 'config.email')
+            .email(data.config.email, 'config.email');
+    } else if (data.channel_type === 'webhook' && data.config) {
+        validator
+            .required(data.config.url, 'config.url')
+            .url(data.config.url, 'config.url');
+    }
+
+    return validator;
+}
+
+/**
+ * 验证发送通知请求数据
+ * @param {Object} data - 发送通知请求数据
+ * @returns {Validator}
+ */
+function validateSendNotification(data) {
+    const validator = createValidator();
+
+    validator
+        .required(data.subscription_id, 'subscription_id')
+        .integer(data.subscription_id, 'subscription_id')
+        .range(data.subscription_id, 'subscription_id', 1)
+
+        .required(data.notification_type, 'notification_type')
+        .string(data.notification_type, 'notification_type')
+        .enum(data.notification_type, 'notification_type', [
+            'renewal_reminder',
+            'expiration_warning',
+            'payment_failed',
+            'trial_ending'
+        ])
+
+        .integer(data.user_id, 'user_id')
+        .range(data.user_id, 'user_id', 1)
+
+        .array(data.channels, 'channels')
+        .custom(data.channels, 'channels',
+            (channels) => !channels || channels.every(channel => ['telegram', 'email', 'webhook'].includes(channel)),
+            'channels must contain only valid channel types: telegram, email, webhook'
+        );
+
+    return validator;
+}
+
 module.exports = {
     Validator,
     createValidator,
     validateSubscription,
-    validateSubscriptionWithForeignKeys
+    validateSubscriptionWithForeignKeys,
+    validateNotificationSetting,
+    validateChannelConfig,
+    validateSendNotification
 };
