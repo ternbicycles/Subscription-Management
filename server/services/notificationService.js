@@ -1,6 +1,12 @@
 const TelegramService = require('./telegramService');
 const { createDatabaseConnection } = require('../config/database');
 const UserPreferenceService = require('./userPreferenceService');
+const { getTemplate, getSupportedLanguages } = require('../config/notificationTemplates');
+const {
+  SUPPORTED_NOTIFICATION_TYPES,
+  SUPPORTED_CHANNELS,
+  DEFAULT_NOTIFICATION_CHANNELS
+} = require('../config/notification');
 
 class NotificationService {
     constructor(db = null) {
@@ -12,19 +18,26 @@ class NotificationService {
     /**
      * 发送通知
      * @param {Object} notificationData - 通知数据
+     * @param {number} notificationData.subscriptionId - 订阅ID
+     * @param {string} notificationData.notificationType - 通知类型
+     * @param {string[]} [notificationData.channels] - 指定的通知渠道
      * @returns {Promise<Object>} 发送结果
      */
     async sendNotification(notificationData) {
         const {
-            userId = 1,
             subscriptionId,
             notificationType,
             channels = null
         } = notificationData;
 
         try {
-            // 获取用户通知设置
-            const settings = this.getNotificationSettings(userId, notificationType);
+            // 验证通知类型
+            if (!SUPPORTED_NOTIFICATION_TYPES.includes(notificationType)) {
+                return { success: false, message: 'Invalid notification type' };
+            }
+
+            // 获取通知设置
+            const settings = this.getNotificationSettings(notificationType);
             if (!settings || !settings.is_enabled) {
                 return { success: false, message: 'Notification type disabled' };
             }
@@ -35,14 +48,13 @@ class NotificationService {
                 return { success: false, message: 'Subscription not found' };
             }
 
-            // 获取用户配置的通知渠道
-            const targetChannels = channels || this.getEnabledChannels(settings);
+            // 获取配置的通知渠道
+            const targetChannels = channels || this.getEnabledChannels();
 
             // 为每个渠道发送通知
             const results = [];
             for (const channel of targetChannels) {
                 const result = await this.sendToChannel({
-                    userId,
                     subscription,
                     notificationType,
                     channel,
@@ -61,17 +73,21 @@ class NotificationService {
     /**
      * 发送到指定渠道
      * @param {Object} params - 发送参数
+     * @param {Object} params.subscription - 订阅信息
+     * @param {string} params.notificationType - 通知类型
+     * @param {string} params.channel - 通知渠道
+     * @param {Object} params.settings - 通知设置
      * @returns {Promise<Object>} 发送结果
      */
-    async sendToChannel({ userId, subscription, notificationType, channel, settings }) {
+    async sendToChannel({ subscription, notificationType, channel, settings }) {
         try {
-            const channelConfig = this.getChannelConfig(userId, channel);
+            const channelConfig = this.getChannelConfig(channel);
             if (!channelConfig || !channelConfig.is_active) {
                 return { success: false, channel, message: 'Channel not configured' };
             }
 
-            // 获取用户语言偏好
-            const userLanguage = this.userPreferenceService.getUserLanguage(userId);
+            // 获取用户语言偏好（单用户系统）
+            const userLanguage = this.userPreferenceService.getUserLanguage();
             
             // 渲染消息模板
             const messageContent = this.renderMessageTemplate({
@@ -99,7 +115,6 @@ class NotificationService {
 
             // 直接创建最终状态的通知记录
             const notificationRecord = this.createNotificationRecord({
-                userId,
                 subscriptionId: subscription.id,
                 notificationType,
                 channelType: channel,
@@ -122,21 +137,16 @@ class NotificationService {
 
     /**
      * 获取通知设置
-     * @param {number} userId - 用户ID
      * @param {string} notificationType - 通知类型
      * @returns {Object|null} 通知设置
      */
-    getNotificationSettings(userId, notificationType) {
+    getNotificationSettings(notificationType) {
         try {
             const query = `
                 SELECT * FROM notification_settings
-                WHERE user_id = ? AND notification_type = ?
+                WHERE notification_type = ?
             `;
-            const result = this.db.prepare(query).get(userId, notificationType);
-            if (result) {
-                // Parse JSON fields
-                result.notification_channels = JSON.parse(result.notification_channels || '["telegram"]');
-            }
+            const result = this.db.prepare(query).get(notificationType);
             return result;
         } catch (error) {
             console.error('Error getting notification settings:', error);
@@ -168,44 +178,39 @@ class NotificationService {
 
     /**
      * 获取启用的通知渠道
-     * @param {Object} settings - 通知设置
      * @returns {Array<string>} 渠道列表
      */
-    getEnabledChannels(settings) {
+    getEnabledChannels() {
         try {
-            if (!settings.notification_channels) {
-                return ['telegram']; // 默认渠道
+            const query = `
+                SELECT channel_type FROM notification_channels
+                WHERE is_active = 1
+            `;
+            const results = this.db.prepare(query).all();
+
+            if (results.length === 0) {
+                return DEFAULT_NOTIFICATION_CHANNELS; // 使用默认渠道
             }
 
-            // notification_channels is already parsed by getNotificationSettings
-            if (Array.isArray(settings.notification_channels)) {
-                return settings.notification_channels;
-            }
-
-            // Fallback: try to parse if it's still a string
-            const channels = typeof settings.notification_channels === 'string'
-                ? JSON.parse(settings.notification_channels)
-                : settings.notification_channels;
-            return Array.isArray(channels) ? channels : ['telegram'];
+            return results.map(row => row.channel_type);
         } catch (error) {
-            console.error('Error parsing notification channels:', error);
-            return ['telegram'];
+            console.error('Error getting enabled channels:', error);
+            return DEFAULT_NOTIFICATION_CHANNELS;
         }
     }
 
     /**
      * 获取渠道配置
-     * @param {number} userId - 用户ID
      * @param {string} channelType - 渠道类型
      * @returns {Object|null} 渠道配置
      */
-    getChannelConfig(userId, channelType) {
+    getChannelConfig(channelType) {
         try {
             const query = `
-                SELECT * FROM notification_channels 
-                WHERE user_id = ? AND channel_type = ?
+                SELECT * FROM notification_channels
+                WHERE channel_type = ?
             `;
-            const result = this.db.prepare(query).get(userId, channelType);
+            const result = this.db.prepare(query).get(channelType);
             if (result) {
                 try {
                     result.config = JSON.parse(result.channel_config);
@@ -269,32 +274,8 @@ class NotificationService {
      */
     getTemplate(notificationType, language, channel) {
         try {
-            const query = `
-                SELECT * FROM notification_templates 
-                WHERE notification_type = ? AND language = ? AND channel_type = ? AND is_active = 1
-            `;
-            
-            // 尝试获取指定语言的模板
-            let result = this.db.prepare(query).get(notificationType, language, channel);
-            if (result) {
-                return result;
-            }
-            
-            // 语言回退机制
-            const fallbackLanguages = ['en', 'zh-CN']; // 回退顺序
-            
-            for (const fallbackLang of fallbackLanguages) {
-                if (fallbackLang !== language) {
-                    result = this.db.prepare(query).get(notificationType, fallbackLang, channel);
-                    if (result) {
-                        console.log(`Template fallback: ${language} -> ${fallbackLang} for ${notificationType}`);
-                        return result;
-                    }
-                }
-            }
-            
-            console.warn(`No template found for ${notificationType} in any language for channel ${channel}`);
-            return null;
+            // 使用配置文件中的模板
+            return getTemplate(notificationType, language, channel);
         } catch (error) {
             console.error('Error getting template:', error);
             return null;
@@ -322,17 +303,25 @@ class NotificationService {
     /**
      * 创建通知记录
      * @param {Object} data - 通知数据
+     * @param {number} data.subscriptionId - 订阅ID
+     * @param {string} data.notificationType - 通知类型
+     * @param {string} data.channelType - 渠道类型
+     * @param {string} data.recipient - 接收者
+     * @param {string} data.messageContent - 消息内容
+     * @param {string} data.status - 状态 ('sent' 或 'failed')
+     * @param {Date} [data.sentAt] - 发送时间
+     * @param {string} [data.errorMessage] - 错误信息
      * @returns {Object} 创建的记录
      */
     createNotificationRecord(data) {
         try {
             const query = `
-                INSERT INTO notification_history 
+                INSERT INTO notification_history
                 (user_id, subscription_id, notification_type, channel_type, status, recipient, message_content, sent_at, error_message)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `;
             const result = this.db.prepare(query).run(
-                data.userId,
+                1, // 固定用户ID为1（单用户系统）
                 data.subscriptionId,
                 data.notificationType,
                 data.channelType,

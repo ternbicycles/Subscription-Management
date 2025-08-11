@@ -25,6 +25,7 @@ const { createSubscriptionRenewalSchedulerRoutes, createProtectedSubscriptionRen
 const { createNotificationRoutes, createProtectedNotificationRoutes } = require('./routes/notifications');
 const { createSchedulerRoutes, createProtectedSchedulerRoutes } = require('./routes/scheduler');
 const userPreferencesRoutes = require('./routes/userPreferences');
+const templatesRoutes = require('./routes/templates');
 
 const app = express();
 const port = process.env.PORT || 3001; // Use PORT from environment or default to 3001
@@ -103,6 +104,9 @@ protectedApiRouter.use('/scheduler', createProtectedSchedulerRoutes(notification
 
 // User preferences routes
 apiRouter.use('/user-preferences', userPreferencesRoutes);
+
+// Template routes
+apiRouter.use('/templates', templatesRoutes);
 
 // Register routers
 app.use('/api', apiRouter);

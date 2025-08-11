@@ -10,14 +10,13 @@ class UserPreferenceService {
     }
 
     /**
-     * Get user language preference
-     * @param {number} userId - User ID (default: 1 for single user system)
+     * Get user language preference (single user system)
      * @returns {string} Language code (e.g., 'zh-CN', 'en')
      */
-    getUserLanguage(userId = 1) {
+    getUserLanguage() {
         try {
-            const query = `SELECT language FROM settings WHERE id = ?`;
-            const result = this.db.prepare(query).get(userId);
+            const query = `SELECT language FROM settings WHERE id = 1`;
+            const result = this.db.prepare(query).get();
             return result ? result.language : 'zh-CN'; // Default fallback
         } catch (error) {
             console.error('Error getting user language:', error);
@@ -26,12 +25,11 @@ class UserPreferenceService {
     }
 
     /**
-     * Set user language preference
+     * Set user language preference (single user system)
      * @param {string} language - Language code
-     * @param {number} userId - User ID (default: 1 for single user system)
      * @returns {boolean} Success status
      */
-    setUserLanguage(language, userId = 1) {
+    setUserLanguage(language) {
         try {
             // Validate language code
             const supportedLanguages = ['zh-CN', 'en', 'ja', 'ko', 'fr', 'de', 'es'];
@@ -40,19 +38,19 @@ class UserPreferenceService {
             }
 
             const query = `
-                UPDATE settings 
-                SET language = ?, updated_at = CURRENT_TIMESTAMP 
-                WHERE id = ?
+                UPDATE settings
+                SET language = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = 1
             `;
-            const result = this.db.prepare(query).run(language, userId);
-            
+            const result = this.db.prepare(query).run(language);
+
             if (result.changes === 0) {
                 // If no rows affected, insert new record
                 const insertQuery = `
-                    INSERT OR REPLACE INTO settings (id, language, currency, theme, show_original_currency) 
-                    VALUES (?, ?, 'CNY', 'system', 1)
+                    INSERT OR REPLACE INTO settings (id, language, currency, theme, show_original_currency)
+                    VALUES (1, ?, 'CNY', 'system', 1)
                 `;
-                this.db.prepare(insertQuery).run(userId, language);
+                this.db.prepare(insertQuery).run(language);
             }
 
             console.log(`User language preference updated to: ${language}`);
