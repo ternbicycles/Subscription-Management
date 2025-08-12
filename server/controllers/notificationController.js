@@ -129,7 +129,6 @@ class NotificationController {
      */
     configureChannel = async (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
             const channelData = req.body;
 
             // 验证输入数据
@@ -139,7 +138,7 @@ class NotificationController {
             }
 
             const { channel_type, config } = channelData;
-            const result = await this.notificationService.configureChannel(userId, channel_type, config);
+            const result = await this.notificationService.configureChannel(channel_type, config);
 
             if (result.success) {
                 responseHelper.success(res, result);
@@ -178,7 +177,6 @@ class NotificationController {
      */
     testNotification = async (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
             const { channel_type } = req.body;
 
             // 验证输入数据
@@ -192,7 +190,7 @@ class NotificationController {
                 return responseHelper.badRequest(res, validator.getErrors());
             }
 
-            const result = await this.notificationService.testNotification(userId, channel_type);
+            const result = await this.notificationService.testNotification(channel_type);
 
             if (result.success) {
                 responseHelper.success(res, result);
@@ -243,10 +241,9 @@ class NotificationController {
      */
     getNotificationHistory = (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
             const { page = 1, limit = 20, status, type } = req.query;
 
-            const result = this.notificationService.getNotificationHistory(userId, {
+            const result = this.notificationService.getNotificationHistory({
                 page: parseInt(page),
                 limit: parseInt(limit),
                 status,
@@ -275,7 +272,6 @@ class NotificationController {
      */
     getNotificationStats = (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
             const db = this.notificationService.db;
 
             const stats = {
@@ -290,12 +286,11 @@ class NotificationController {
 
             // 总体统计
             const totalQuery = `
-                SELECT status, COUNT(*) as count 
-                FROM notification_history 
-                WHERE user_id = ?
+                SELECT status, COUNT(*) as count
+                FROM notification_history
                 GROUP BY status
             `;
-            const totalStats = db.prepare(totalQuery).all(userId);
+            const totalStats = db.prepare(totalQuery).all();
             
             totalStats.forEach(stat => {
                 stats.total += stat.count;
@@ -304,13 +299,12 @@ class NotificationController {
 
             // 按类型统计
             const typeQuery = `
-                SELECT notification_type, status, COUNT(*) as count 
-                FROM notification_history 
-                WHERE user_id = ?
+                SELECT notification_type, status, COUNT(*) as count
+                FROM notification_history
                 GROUP BY notification_type, status
             `;
-            const typeStats = db.prepare(typeQuery).all(userId);
-            
+            const typeStats = db.prepare(typeQuery).all();
+
             typeStats.forEach(stat => {
                 if (!stats.byType[stat.notification_type]) {
                     stats.byType[stat.notification_type] = { total: 0 };
@@ -321,12 +315,11 @@ class NotificationController {
 
             // 按渠道统计
             const channelQuery = `
-                SELECT channel_type, status, COUNT(*) as count 
-                FROM notification_history 
-                WHERE user_id = ?
+                SELECT channel_type, status, COUNT(*) as count
+                FROM notification_history
                 GROUP BY channel_type, status
             `;
-            const channelStats = db.prepare(channelQuery).all(userId);
+            const channelStats = db.prepare(channelQuery).all();
             
             channelStats.forEach(stat => {
                 if (!stats.byChannel[stat.channel_type]) {

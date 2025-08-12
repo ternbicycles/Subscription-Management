@@ -88,7 +88,7 @@ class NotificationService {
 
             // 获取用户语言偏好（单用户系统）
             const userLanguage = this.userPreferenceService.getUserLanguage();
-            
+
             // 渲染消息模板
             const messageContent = this.renderMessageTemplate({
                 subscription,
@@ -126,7 +126,7 @@ class NotificationService {
             });
 
             // 更新渠道最后使用时间
-            this.updateChannelLastUsed(userId, channel);
+            this.updateChannelLastUsed(channel);
 
             return sendResult;
         } catch (error) {
@@ -317,11 +317,10 @@ class NotificationService {
         try {
             const query = `
                 INSERT INTO notification_history
-                (user_id, subscription_id, notification_type, channel_type, status, recipient, message_content, sent_at, error_message)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (subscription_id, notification_type, channel_type, status, recipient, message_content, sent_at, error_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `;
             const result = this.db.prepare(query).run(
-                1, // 固定用户ID为1（单用户系统）
                 data.subscriptionId,
                 data.notificationType,
                 data.channelType,
@@ -342,17 +341,16 @@ class NotificationService {
 
     /**
      * 更新渠道最后使用时间
-     * @param {number} userId - 用户ID
      * @param {string} channelType - 渠道类型
      */
-    updateChannelLastUsed(userId, channelType) {
+    updateChannelLastUsed(channelType) {
         try {
             const query = `
-                UPDATE notification_channels 
-                SET last_used_at = CURRENT_TIMESTAMP 
-                WHERE user_id = ? AND channel_type = ?
+                UPDATE notification_channels
+                SET last_used_at = CURRENT_TIMESTAMP
+                WHERE channel_type = ?
             `;
-            this.db.prepare(query).run(userId, channelType);
+            this.db.prepare(query).run(channelType);
         } catch (error) {
             console.error('Error updating channel last used time:', error);
         }
@@ -392,37 +390,36 @@ class NotificationService {
 
     /**
      * 配置通知渠道
-     * @param {number} userId - 用户ID
      * @param {string} channelType - 渠道类型
      * @param {Object} config - 配置信息
      * @returns {Object} 配置结果
      */
-    async configureChannel(userId, channelType, config) {
+    async configureChannel(channelType, config) {
         try {
             const configJson = JSON.stringify(config);
 
             // 检查是否已存在（不限制 is_active 状态）
             const existingQuery = `
                 SELECT * FROM notification_channels
-                WHERE user_id = ? AND channel_type = ?
+                WHERE channel_type = ?
             `;
-            const existing = this.db.prepare(existingQuery).get(userId, channelType);
+            const existing = this.db.prepare(existingQuery).get(channelType);
 
             if (existing) {
                 // 更新现有配置
                 const query = `
                     UPDATE notification_channels
                     SET channel_config = ?, is_active = 1, updated_at = CURRENT_TIMESTAMP
-                    WHERE user_id = ? AND channel_type = ?
+                    WHERE channel_type = ?
                 `;
-                this.db.prepare(query).run(configJson, userId, channelType);
+                this.db.prepare(query).run(configJson, channelType);
             } else {
                 // 创建新配置
                 const query = `
-                    INSERT INTO notification_channels (user_id, channel_type, channel_config, is_active)
-                    VALUES (?, ?, ?, 1)
+                    INSERT INTO notification_channels (channel_type, channel_config, is_active)
+                    VALUES (?, ?, 1)
                 `;
-                this.db.prepare(query).run(userId, channelType, configJson);
+                this.db.prepare(query).run(channelType, configJson);
             }
 
             return { success: true, message: 'Channel configured successfully' };
@@ -434,13 +431,12 @@ class NotificationService {
 
     /**
      * 测试通知
-     * @param {number} userId - 用户ID
      * @param {string} channelType - 渠道类型
      * @returns {Promise<Object>} 测试结果
      */
-    async testNotification(userId, channelType) {
+    async testNotification(channelType) {
         try {
-            const channelConfig = this.getChannelConfig(userId, channelType);
+            const channelConfig = this.getChannelConfig(channelType);
             if (!channelConfig) {
                 return { success: false, message: 'Channel not configured' };
             }
@@ -459,11 +455,10 @@ class NotificationService {
 
     /**
      * 获取通知历史
-     * @param {number} userId - 用户ID
      * @param {Object} options - 查询选项
      * @returns {Object} 包含数据和总数的对象
      */
-    getNotificationHistory(userId, options = {}) {
+    getNotificationHistory(options = {}) {
         try {
             const { page = 1, limit = 20, status, type } = options;
             const offset = (page - 1) * limit;
@@ -472,11 +467,11 @@ class NotificationService {
             let baseQuery = `
                 FROM notification_history nh
                 LEFT JOIN subscriptions s ON nh.subscription_id = s.id
-                WHERE nh.user_id = ?
+                WHERE 1=1
             `;
-            
-            const params = [userId];
-            const countParams = [userId];
+
+            const params = [];
+            const countParams = [];
             
             if (status) {
                 baseQuery += ' AND nh.status = ?';

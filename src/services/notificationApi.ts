@@ -77,19 +77,19 @@ export const notificationApi = {
     apiClient.put<{ message: string }>(`/protected/notifications/settings/${settingId}`, setting),
 
   // 配置通知渠道
-  configureChannel: (userId: number, channelType: string, config: Record<string, unknown>) =>
-    apiClient.post<{ message: string }>(`/protected/notifications/channels/${userId}`, {
+  configureChannel: (channelType: string, config: Record<string, unknown>) =>
+    apiClient.post<{ message: string }>(`/protected/notifications/channels`, {
       channel_type: channelType,
       config
     }),
 
   // 获取渠道配置
-  getChannelConfig: (userId: number, channelType: string) =>
-    apiClient.get<NotificationChannel>(`/protected/notifications/channels/${userId}/${channelType}`),
+  getChannelConfig: (channelType: string) =>
+    apiClient.get<NotificationChannel>(`/protected/notifications/channels/${channelType}`),
 
   // 测试通知
-  testNotification: (userId: number, channelType: string) =>
-    apiClient.post(`/protected/notifications/test/${userId}`, {
+  testNotification: (channelType: string) =>
+    apiClient.post(`/protected/notifications/test`, {
       channel_type: channelType
     }),
 
@@ -103,13 +103,13 @@ export const notificationApi = {
     apiClient.post(`/protected/notifications/send`, data),
 
   // 获取通知历史
-  getHistory: (userId: number, params?: {
+  getHistory: (params?: {
     page?: number;
     limit?: number;
     status?: string;
     type?: string;
   }) => {
-    let url = `/protected/notifications/history/${userId}`;
+    let url = `/protected/notifications/history`;
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
@@ -135,8 +135,8 @@ export const notificationApi = {
 
 
   // 获取通知统计
-  getStats: (userId: number) =>
-    apiClient.get<NotificationStats>(`/protected/notifications/stats/${userId}`),
+  getStats: () =>
+    apiClient.get<NotificationStats>(`/protected/notifications/stats`),
 
   // 验证Telegram Chat ID
   validateChatId: (chatId: string) =>

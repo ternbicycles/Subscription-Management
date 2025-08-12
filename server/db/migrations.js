@@ -177,7 +177,6 @@ class DatabaseMigrations {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS notification_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL DEFAULT 1,
         subscription_id INTEGER NOT NULL,
         notification_type TEXT NOT NULL,
         channel_type TEXT NOT NULL,
@@ -216,7 +215,6 @@ class DatabaseMigrations {
       CREATE INDEX IF NOT EXISTS idx_notification_channels_active ON notification_channels(is_active);
 
       -- Notification history indexes
-      CREATE INDEX IF NOT EXISTS idx_notification_history_user ON notification_history(user_id);
       CREATE INDEX IF NOT EXISTS idx_notification_history_subscription ON notification_history(subscription_id);
       CREATE INDEX IF NOT EXISTS idx_notification_history_status ON notification_history(status);
       CREATE INDEX IF NOT EXISTS idx_notification_history_created ON notification_history(created_at);
@@ -268,8 +266,6 @@ class DatabaseMigrations {
 
     console.log('✅ Notification system created successfully');
   }
-
-
 
   // Helper method to parse SQL statements properly
   parseSQL(sql) {

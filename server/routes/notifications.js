@@ -21,19 +21,18 @@ function createProtectedNotificationRoutes(db) {
     router.put('/settings/:id', notificationController.updateSetting);
 
     // 渠道配置路由
-    router.post('/channels/:userId', notificationController.configureChannel);
-    router.get('/channels/:userId/:channelType', notificationController.getChannelConfig);
-    router.get('/channels/:id/:channelType', notificationController.getChannelConfig);
+    router.post('/channels', notificationController.configureChannel);
+    router.get('/channels/:channelType', notificationController.getChannelConfig);
 
     // 通知操作路由
     router.post('/send', notificationController.sendNotification);
-    router.post('/test/:userId', notificationController.testNotification);
+    router.post('/test', notificationController.testNotification);
 
     // 历史记录路由
-    router.get('/history/:userId', notificationController.getNotificationHistory);
+    router.get('/history', notificationController.getNotificationHistory);
 
     // 统计路由
-    router.get('/stats/:userId', notificationController.getNotificationStats);
+    router.get('/stats', notificationController.getNotificationStats);
 
     // Telegram相关路由
     router.post('/validate-chat-id', notificationController.validateChatId);

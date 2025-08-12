@@ -9,6 +9,7 @@ import { Loader2, Save, Send, Check, X, MessageCircle, Settings } from 'lucide-r
 import { useTranslation } from 'react-i18next';
 import { notificationApi } from '@/services/notificationApi';
 import { useToast } from '@/hooks/use-toast';
+import { useNotificationStore } from '@/store/notificationStore';
 
 interface TelegramConfigProps {
   userId: number;
@@ -55,40 +56,52 @@ interface BotInfoResponse {
 export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfigChange }) => {
   const { t } = useTranslation('notification');
   const { toast } = useToast();
-  
-  const [config, setConfig] = useState<TelegramConfigData>({ chat_id: '' });
+
+  // 使用本地存储
+  const {
+    channelConfigs,
+    setTelegramConfig,
+    setChannelValidated
+  } = useNotificationStore();
+
+  const [config, setConfig] = useState<TelegramConfigData>({
+    chat_id: channelConfigs.telegram?.chat_id || ''
+  });
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
-  const [chatIdValid, setChatIdValid] = useState<boolean | null>(null);
+  const [chatIdValid, setChatIdValid] = useState<boolean | null>(
+    channelConfigs.telegram?.validated ?? null
+  );
   const [botConfig, setBotConfig] = useState<BotConfig | null>(null);
   const [botInfo, setBotInfo] = useState<BotInfo | null>(null);
 
   const loadConfig = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await notificationApi.getChannelConfig(userId, 'telegram');
+      const response = await notificationApi.getChannelConfig('telegram');
       if (response) {
         // 后端返回的配置结构：{ id, user_id, channel_type, channel_config, config, is_active, ... }
         // config 字段是解析后的 JSON 对象，channel_config 是原始 JSON 字符串
         const configData = (response as unknown as ConfigResponse).config || {};
-        setConfig({
-          chat_id: (configData as TelegramConfigData).chat_id || ''
-        });
+        const chatId = (configData as TelegramConfigData).chat_id || '';
+
+        // 更新本地状态和本地存储
+        setConfig({ chat_id: chatId });
+        setTelegramConfig({ chat_id: chatId });
       }
     } catch (error) {
       console.error('Failed to load Telegram config:', error);
-      // 如果配置不存在（404错误），重置为空配置
+      // 如果配置不存在（404错误），使用本地存储的数据或重置为空配置
       if ((error as ApiResponse).response?.status === 404) {
-        setConfig({
-          chat_id: ''
-        });
+        const localChatId = channelConfigs.telegram?.chat_id || '';
+        setConfig({ chat_id: localChatId });
       }
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [setTelegramConfig, channelConfigs.telegram?.chat_id]);
 
   const loadBotInfo = useCallback(async () => {
     try {
@@ -116,6 +129,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
   const validateChatId = async (chatId: string) => {
     if (!chatId.trim()) {
       setChatIdValid(null);
+      setChannelValidated('telegram', false);
       return;
     }
 
@@ -125,6 +139,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
       // The API client already extracts the data field, so response is the data directly
       const isValid = (response as ValidationResponse)?.success || false;
       setChatIdValid(isValid);
+      setChannelValidated('telegram', isValid);
 
       if (isValid) {
         toast({
@@ -141,6 +156,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
     } catch (error) {
       console.error('Failed to validate Chat ID:', error);
       setChatIdValid(false);
+      setChannelValidated('telegram', false);
       toast({
         title: t('chatIdInvalid'),
         description: t('chatIdHelp'),
@@ -163,7 +179,15 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
 
     try {
       setSaving(true);
-      await notificationApi.configureChannel(userId, 'telegram', { chat_id: config.chat_id });
+
+      // 先保存到本地存储
+      setTelegramConfig({
+        chat_id: config.chat_id,
+        validated: chatIdValid ?? false
+      });
+
+      // 然后保存到服务器
+      await notificationApi.configureChannel('telegram', { chat_id: config.chat_id });
 
       // 重新加载配置以确保显示最新保存的数据
       await loadConfig();
@@ -197,7 +221,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
 
     try {
       setTesting(true);
-      await notificationApi.testNotification(userId, 'telegram');
+      await notificationApi.testNotification('telegram');
       toast({
         title: t('testSuccess'),
         description: t('testSuccess'),
@@ -217,6 +241,9 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
   const handleChatIdChange = (value: string) => {
     setConfig(prev => ({ ...prev, chat_id: value }));
     setChatIdValid(null);
+    // 实时更新本地存储
+    setTelegramConfig({ chat_id: value, validated: false });
+    setChannelValidated('telegram', false);
   };
 
   const getStatusBadge = () => {

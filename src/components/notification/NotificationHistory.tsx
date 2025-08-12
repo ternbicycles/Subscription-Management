@@ -133,7 +133,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
       // Note: searchTerm and channelFilter still handled on frontend for now
       // as backend doesn't support these filters yet
       
-      const response = await notificationApi.getHistory(userId, params);
+      const response = await notificationApi.getHistory(params);
       setHistory(Array.isArray(response.data) ? response.data : []);
       setHistoryPagination(prev => ({
         ...prev,
@@ -152,12 +152,12 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
     } finally {
       setHistoryLoading(false);
     }
-  }, [userId, historyPagination.limit, statusFilter, typeFilter, t, toast]);
+  }, [historyPagination.limit, statusFilter, typeFilter, t, toast]);
 
   const loadStats = useCallback(async () => {
     try {
       setStatsLoading(true);
-      const response = await notificationApi.getStats(userId);
+      const response = await notificationApi.getStats();
       setStats(response);
     } catch (error) {
       console.error('Failed to load notification stats:', error);
@@ -165,7 +165,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
     } finally {
       setStatsLoading(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => {
     loadHistory();
