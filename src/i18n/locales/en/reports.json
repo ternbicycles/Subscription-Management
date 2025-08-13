@@ -26,6 +26,7 @@
     "amount": "Amount",
     "subscriptions": "Subscriptions",
     "total": "Total",
+    "payments": "Payments",
     "percentage": "Percentage",
     "noDataAvailable": "No data available",
     "noExpenseDataAvailable": "No expense data available",

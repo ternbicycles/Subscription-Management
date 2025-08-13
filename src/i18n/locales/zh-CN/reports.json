@@ -26,6 +26,7 @@
     "amount": "金额",
     "subscriptions": "订阅数",
     "total": "总计",
+    "payments": "支付数",
     "percentage": "百分比",
     "noDataAvailable": "暂无数据",
     "noExpenseDataAvailable": "暂无支出数据",

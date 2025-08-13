@@ -183,7 +183,7 @@ export function SubscriptionCard({
               </span>
               {isExpiringSoon && status === 'active' && (
                 <Badge variant={getBadgeVariant()}>
-                  {daysLeft === 0 ? t('common:today') : `${daysLeft} ${t('common:days')}${daysLeft !== 1 ? 's' : ''}`}
+                  {daysLeft === 0 ? t('common:today') : `${daysLeft} ${t('common:days')}`}
                 </Badge>
               )}
             </div>

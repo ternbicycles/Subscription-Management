@@ -301,17 +301,22 @@ class SubscriptionService extends BaseRepository {
             }
         }
 
-        // 发送订阅变更通知
-        try {
-            await this.notificationService.sendNotification({
+        // 发送订阅变更通知（异步触发，不阻塞请求）
+        this.notificationService
+            .sendNotification({
                 userId: 1, // 默认用户ID，在多用户系统中应该从context获取
                 subscriptionId: id,
                 notificationType: 'subscription_change'
+            })
+            .then(() => {
+                logger.info(`Subscription change notification dispatched for subscription ${id}`);
+            })
+            .catch((error) => {
+                logger.error(
+                    `Failed to send subscription change notification for subscription ${id}:`,
+                    error.message
+                );
             });
-            logger.info(`Subscription change notification sent for subscription ${id}`);
-        } catch (error) {
-            logger.error(`Failed to send subscription change notification for subscription ${id}:`, error.message);
-        }
 
         return result;
     }

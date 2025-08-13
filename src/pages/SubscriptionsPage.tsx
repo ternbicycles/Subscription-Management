@@ -47,6 +47,7 @@ import {
   SubscriptionStatus,
   BillingCycle
 } from "@/store/subscriptionStore"
+import { optimisticUpdateSubscription, useOptimisticSubscriptions } from "@/store/optimisticStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import { exportSubscriptionsToJSON } from "@/lib/subscription-utils"
 
@@ -136,7 +137,10 @@ export function SubscriptionsPage() {
     return matchesSearch && matchesStatus && matchesCategory && matchesBillingCycle
   })
 
-  const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
+  // 将乐观更新应用到筛选后的订阅列表
+  const optimisticFiltered = useOptimisticSubscriptions(filteredSubscriptions)
+
+  const sortedSubscriptions = [...optimisticFiltered].sort((a, b) => {
     const dateA = new Date(a.nextBillingDate).getTime()
     const dateB = new Date(b.nextBillingDate).getTime()
 
@@ -168,22 +172,27 @@ export function SubscriptionsPage() {
 
   // Handler for updating subscription
   const handleUpdateSubscription = async (id: number, data: Omit<Subscription, "id" | "lastBillingDate">) => {
-    const { error } = await updateSubscription(id, data)
-    
-    if (error) {
-      toast({
-        title: t('subscription:errorUpdate'),
-        description: getErrorMessage(error) || t('subscription:failedUpdate'),
-        variant: "destructive"
-      })
-      return
-    }
-
-    setEditingSubscription(null)
-    toast({
-      title: t('subscription:updated'),
-      description: `${data.name} ${t('subscription:updateSuccess')}`
-    })
+    // 乐观更新：立即更新 UI，然后后台请求与最终刷新
+    await optimisticUpdateSubscription(
+      id,
+      data,
+      async () => {
+        setEditingSubscription(null)
+        toast({
+          title: t('subscription:updated'),
+          description: `${data.name} ${t('subscription:updateSuccess')}`
+        })
+        // 背景刷新，确保与后端一致
+        fetchSubscriptions()
+      },
+      (error) => {
+        toast({
+          title: t('subscription:errorUpdate'),
+          description: getErrorMessage(error) || t('subscription:failedUpdate'),
+          variant: "destructive"
+        })
+      }
+    )
   }
 
   // State for delete confirmation

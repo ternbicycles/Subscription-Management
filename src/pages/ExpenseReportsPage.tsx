@@ -23,6 +23,8 @@ import { ExpenseTrendChart } from "@/components/charts/ExpenseTrendChart"
 import { YearlyTrendChart } from "@/components/charts/YearlyTrendChart"
 import { CategoryPieChart } from "@/components/charts/CategoryPieChart"
 import { ExpenseInfoCards } from "@/components/charts/ExpenseInfoCards"
+import { apiClient } from '@/utils/api-client'
+import type { PaymentRecordApi } from '@/utils/dataTransform'
 
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -164,10 +166,33 @@ export function ExpenseReportsPage() {
           const quarterlyInfo = calculateQuarterlyExpenses(recentQuarterly, userCurrency)
           const yearlyInfo = calculateYearlyExpenses(recentYearly, userCurrency)
 
+          // Ensure paymentCount matches real payment-history records
+          const fillAccurateCounts = async (list: ExpenseInfoData[]): Promise<ExpenseInfoData[]> => {
+            const updated = await Promise.all(
+              list.map(async (item) => {
+                try {
+                  const records = await apiClient.get<PaymentRecordApi[]>(
+                    `/payment-history?start_date=${item.startDate}&end_date=${item.endDate}&status=succeeded`
+                  )
+                  return { ...item, paymentCount: records.length }
+                } catch {
+                  return item
+                }
+              })
+            )
+            return updated
+          }
+
+          const [monthlyFixed, quarterlyFixed, yearlyFixed] = await Promise.all([
+            fillAccurateCounts(monthlyInfo),
+            fillAccurateCounts(quarterlyInfo),
+            fillAccurateCounts(yearlyInfo)
+          ])
+
           setExpenseInfoData({
-            monthly: monthlyInfo,
-            quarterly: quarterlyInfo,
-            yearly: yearlyInfo
+            monthly: monthlyFixed,
+            quarterly: quarterlyFixed,
+            yearly: yearlyFixed
           })
         } else {
           // No data available, set empty state

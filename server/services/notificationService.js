@@ -51,17 +51,17 @@ class NotificationService {
             // 获取配置的通知渠道
             const targetChannels = channels || this.getEnabledChannels();
 
-            // 为每个渠道发送通知
-            const results = [];
-            for (const channel of targetChannels) {
-                const result = await this.sendToChannel({
-                    subscription,
-                    notificationType,
-                    channel,
-                    settings
-                });
-                results.push(result);
-            }
+            // 并行发送到所有渠道以缩短总耗时
+            const results = await Promise.all(
+                targetChannels.map((channel) =>
+                    this.sendToChannel({
+                        subscription,
+                        notificationType,
+                        channel,
+                        settings
+                    })
+                )
+            );
 
             return { success: true, results };
         } catch (error) {

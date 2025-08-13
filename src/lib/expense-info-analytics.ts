@@ -246,7 +246,8 @@ export function getRecentPeriods() {
   return {
     // Last 6 months (including current month)
     monthlyPeriods: Array.from({ length: 6 }, (_, i) => {
-      const date = new Date(currentYear, currentMonth - i, 1)
+      // Date's month parameter is 0-based; currentMonth is 1-based
+      const date = new Date(currentYear, (currentMonth - 1) - i, 1)
       return {
         year: date.getFullYear(),
         month: date.getMonth() + 1,

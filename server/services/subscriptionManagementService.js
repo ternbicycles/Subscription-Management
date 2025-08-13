@@ -38,17 +38,19 @@ class SubscriptionManagementService extends BaseRepository {
                             renewedSubscriptions.push(renewalResult.data);
                         } else {
                             errors++;
-                            // 发送续订失败通知
-                            try {
-                                await this.notificationService.sendNotification({
+                            // 发送续订失败通知（异步触发，不阻塞批处理）
+                            this.notificationService
+                                .sendNotification({
                                     userId: 1, // 默认用户ID，可以根据需要修改
                                     subscriptionId: subscription.id,
                                     notificationType: 'renewal_failure'
+                                })
+                                .then(() => {
+                                    logger.info(`Renewal failure notification dispatched for subscription ${subscription.id}`);
+                                })
+                                .catch((notificationError) => {
+                                    logger.error(`Failed to send renewal failure notification for subscription ${subscription.id}:`, notificationError.message);
                                 });
-                                logger.info(`Renewal failure notification sent for subscription ${subscription.id}`);
-                            } catch (notificationError) {
-                                logger.error(`Failed to send renewal failure notification for subscription ${subscription.id}:`, notificationError.message);
-                            }
                         }
                     }
                 } catch (error) {
@@ -161,17 +163,19 @@ class SubscriptionManagementService extends BaseRepository {
                     renewalData: renewalResult.data
                 };
             } else {
-                // 发送手动续订失败通知
-                try {
-                    await this.notificationService.sendNotification({
+                // 发送手动续订失败通知（异步触发，不阻塞请求）
+                this.notificationService
+                    .sendNotification({
                         userId: 1, // 默认用户ID，可以根据需要修改
                         subscriptionId: subscription.id,
                         notificationType: 'renewal_failure'
+                    })
+                    .then(() => {
+                        logger.info(`Manual renewal failure notification dispatched for subscription ${subscriptionId}`);
+                    })
+                    .catch((notificationError) => {
+                        logger.error(`Failed to send manual renewal failure notification for subscription ${subscriptionId}:`, notificationError.message);
                     });
-                    logger.info(`Manual renewal failure notification sent for subscription ${subscriptionId}`);
-                } catch (notificationError) {
-                    logger.error(`Failed to send manual renewal failure notification for subscription ${subscriptionId}:`, notificationError.message);
-                }
                 throw new Error('Failed to update subscription');
             }
         } catch (error) {
@@ -343,18 +347,23 @@ class SubscriptionManagementService extends BaseRepository {
                     renewedEarly: renewalType === 'manual' && new Date(subscription.next_billing_date) >= new Date()
                 };
 
-                // 发送续订成功通知
-                try {
-                    await this.notificationService.sendNotification({
+                // 发送续订成功通知（异步触发，不阻塞请求）
+                this.notificationService
+                    .sendNotification({
                         userId: 1, // 默认用户ID，可以根据需要修改
                         subscriptionId: subscription.id,
                         notificationType: 'renewal_success'
+                    })
+                    .then(() => {
+                        logger.info(`Renewal success notification dispatched for subscription ${subscription.id}`);
+                    })
+                    .catch((notificationError) => {
+                        logger.error(
+                            `Failed to send renewal success notification for subscription ${subscription.id}:`,
+                            notificationError.message
+                        );
+                        // 不影响续订结果，只记录错误
                     });
-                    logger.info(`Renewal success notification sent for subscription ${subscription.id}`);
-                } catch (notificationError) {
-                    logger.error(`Failed to send renewal success notification for subscription ${subscription.id}:`, notificationError.message);
-                    // 不影响续订结果，只记录错误
-                }
 
                 return {
                     success: true,

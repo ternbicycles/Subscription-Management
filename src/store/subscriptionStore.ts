@@ -79,7 +79,7 @@ const transformFromApi = (sub: SubscriptionApiData): Subscription => {
 }
 
 // Helper function to transform data from frontend (camelCase) to API (snake_case)
-const transformToApi = (sub: Partial<Subscription>) => {
+export const transformToApi = (sub: Partial<Subscription>) => {
   const result: Record<string, unknown> = {}
   if (sub.name !== undefined) result.name = sub.name
   if (sub.plan !== undefined) result.plan = sub.plan
