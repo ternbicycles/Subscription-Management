@@ -102,14 +102,14 @@ export const notificationApi = {
   }) =>
     apiClient.post(`/protected/notifications/send`, data),
 
-  // 获取通知历史
+  // 获取通知历
   getHistory: (params?: {
     page?: number;
     limit?: number;
     status?: string;
     type?: string;
   }) => {
-    let url = `/protected/notifications/history`;
+    let url = `/notifications/history`;
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
@@ -134,9 +134,9 @@ export const notificationApi = {
 
 
 
-  // 获取通知统计
+  // 获取通知统计（公开接口）
   getStats: () =>
-    apiClient.get<NotificationStats>(`/protected/notifications/stats`),
+    apiClient.get<NotificationStats>(`/notifications/stats`),
 
   // 验证Telegram Chat ID
   validateChatId: (chatId: string) =>

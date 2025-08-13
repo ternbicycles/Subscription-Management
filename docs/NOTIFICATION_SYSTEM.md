@@ -100,7 +100,7 @@
   - POST /test
     - body：{ channel_type }
 
-- 历史与统计（Protected：/api/protected/notifications）
+- 历史与统计（Public：/api/notifications）
   - GET /history?page=&limit=&status=&type=
   - GET /stats
 

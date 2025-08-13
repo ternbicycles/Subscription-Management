@@ -6,7 +6,9 @@ function createNotificationRoutes(db) {
     const router = express.Router();
     const notificationController = new NotificationController();
 
-    // Public routes (if any)
+    // Public routes
+    router.get('/history', notificationController.getNotificationHistory);
+    router.get('/stats', notificationController.getNotificationStats);
     
     return router;
 }
