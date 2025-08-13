@@ -12,6 +12,9 @@ export type SubscriptionFormData = {
   currency: string
   paymentMethodId: number
   startDate: string
+  // User-editable next billing date (defaults from startDate + billingCycle)
+  nextBillingDate: string
+
   status: "active" | "trial" | "cancelled"
   categoryId: number
   renewalType: "auto" | "manual"

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw, BarChart3, Settings } from 'lucide-react';
+import { RefreshCw, BarChart3, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { notificationApi, NotificationSetting } from '@/services/notificationApi';
 import { useToast } from '@/hooks/use-toast';

@@ -12,8 +12,6 @@ import {
   History,
   BarChart3,
   Search,
-  Calendar,
-  Clock,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -25,12 +23,9 @@ import { notificationApi, NotificationHistory as NotificationHistoryType, Notifi
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/utils/date';
 
-interface NotificationHistoryProps {
-  userId: number;
-}
 
 // Helper function to parse and format message content (supports zh-CN and en templates)
-const parseMessageContent = (content: string, t: any) => {
+const parseMessageContent = (content: string, t: (key: string, options?: Record<string, unknown>) => string) => {
   if (!content) return { summary: '', details: [] };
 
   // Remove HTML tags but preserve line breaks
@@ -56,7 +51,7 @@ const parseMessageContent = (content: string, t: any) => {
     subscriptionName = nameMatch1[1];
   } else {
     // Pattern 2: generic before action words
-    const nameMatch2 = text.match(/([a-zA-Z0-9_\-\.]+)\s+(?:即将到期|续订成功|续订失败|信息已更新|已过期|is about to expire|has expired|has been successfully renewed|renewal failed|information has been updated)/i);
+    const nameMatch2 = text.match(/([a-zA-Z0-9_.-]+)\s+(?:即将到期|续订成功|续订失败|信息已更新|已过期|is about to expire|has expired|has been successfully renewed|renewal failed|information has been updated)/i);
     if (nameMatch2) subscriptionName = nameMatch2[1];
   }
 
@@ -65,7 +60,7 @@ const parseMessageContent = (content: string, t: any) => {
   const amount = amountMatch ? amountMatch[1] : '';
 
   // Date (accept yyyy-mm-dd or yyyy/mm/dd)
-  const dateMatch = text.match(/(?:到期日期|到期时间|过期时间|Expiration date|Next payment|Scheduled renewal date)[：:\s]*(\d{4}[\/-]\d{1,2}[\/-]\d{1,2})/i);
+  const dateMatch = text.match(/(?:到期日期|到期时间|过期时间|Expiration date|Next payment|Scheduled renewal date)[：:\s]*(\d{4}[/-]\d{1,2}[/-]\d{1,2})/i);
   const date = dateMatch ? dateMatch[1] : '';
 
   // Payment method
@@ -95,7 +90,7 @@ const parseMessageContent = (content: string, t: any) => {
   return { summary, details, fullText: text };
 };
 
-export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId }) => {
+export const NotificationHistory: React.FC = () => {
   const { t } = useTranslation('notification');
   const { toast } = useToast();
   
@@ -118,7 +113,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
   const loadHistory = useCallback(async (page = 1) => {
     try {
       setHistoryLoading(true);
-      const params: any = {
+      const params: { page: number; limit: number; status?: string; type?: string } = {
         page,
         limit: historyPagination.limit
       };
@@ -176,7 +171,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
   useEffect(() => {
     setHistoryPagination(prev => ({ ...prev, page: 1 }));
     loadHistory(1);
-  }, [statusFilter, typeFilter]);
+  }, [statusFilter, typeFilter, loadHistory]);
 
   const handlePageChange = (page: number) => {
     loadHistory(page);
@@ -235,9 +230,6 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({ userId
   const allChannels = ['telegram'];
   
   // Get unique values from current data for information purposes
-  const uniqueStatuses = Array.from(new Set(history.map(h => h.status)));
-  const uniqueTypes = Array.from(new Set(history.map(h => h.notification_type)));
-  const uniqueChannels = Array.from(new Set(history.map(h => h.channel_type)));
 
   return (
     <div className="space-y-6">

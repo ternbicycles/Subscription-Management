@@ -265,10 +265,13 @@ class SubscriptionService extends BaseRepository {
         if (updateData.billing_cycle || updateData.next_billing_date || updateData.start_date) {
             const billing_cycle = updateData.billing_cycle || existingSubscription.billing_cycle;
             const start_date = updateData.start_date || existingSubscription.start_date;
-            let next_billing_date = updateData.next_billing_date || existingSubscription.next_billing_date;
 
-            // 如果更新了 start_date，需要重新计算 next_billing_date
-            if (updateData.start_date) {
+            // 确定 next_billing_date：若客户端明确提供，则以客户端为准；
+            // 否则当计费周期或开始日期变更时，从 start_date + billing_cycle 重新计算。
+            let next_billing_date;
+            if (updateData.next_billing_date) {
+                next_billing_date = updateData.next_billing_date;
+            } else if (updateData.start_date || updateData.billing_cycle) {
                 const currentDate = getTodayString();
                 next_billing_date = calculateNextBillingDateFromStart(
                     start_date,
@@ -276,9 +279,11 @@ class SubscriptionService extends BaseRepository {
                     billing_cycle
                 );
                 updateData.next_billing_date = next_billing_date;
+            } else {
+                next_billing_date = existingSubscription.next_billing_date;
             }
 
-            // 重新计算 last_billing_date
+            // 重新计算 last_billing_date（基于最终的 next_billing_date 与 start_date）
             updateData.last_billing_date = calculateLastBillingDate(
                 next_billing_date,
                 start_date,

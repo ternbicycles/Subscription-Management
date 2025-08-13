@@ -63,6 +63,7 @@ export function SubscriptionForm({
     currency: getBaseCurrency(),
     paymentMethodId: 0,
     startDate: format(new Date(), "yyyy-MM-dd"),
+    nextBillingDate: calculateNextBillingDateFromStart(new Date(), new Date(), "monthly"),
     status: "active",
     categoryId: 0,
     renewalType: "manual",
@@ -73,6 +74,9 @@ export function SubscriptionForm({
   // State for form errors
   const [errors, setErrors] = useState<FormErrors>({})
 
+  // Track if user manually changed nextBillingDate
+  const [nextDateTouched, setNextDateTouched] = useState(false)
+
   // Initialize form with initial data if provided
   useEffect(() => {
     if (initialData) {
@@ -81,6 +85,7 @@ export function SubscriptionForm({
         ...formData,
         website: formData.website || ""
       })
+      setNextDateTouched(false)
     }
   }, [initialData])
 
@@ -96,6 +101,7 @@ export function SubscriptionForm({
           currency: "USD",
           paymentMethodId: 0,
           startDate: format(new Date(), "yyyy-MM-dd"),
+          nextBillingDate: calculateNextBillingDateFromStart(new Date(), new Date(), "monthly"),
           status: "active",
           categoryId: 0,
           renewalType: "manual",
@@ -104,6 +110,7 @@ export function SubscriptionForm({
         })
       }
       setErrors({})
+      setNextDateTouched(false)
     }
   }, [open, initialData])
 
@@ -116,6 +123,13 @@ export function SubscriptionForm({
   // Handle select changes
   const handleSelectChange = (name: string, value: string) => {
     handleFieldChange(name, value, setForm, errors, setErrors)
+    if (name === 'billingCycle') {
+      // Auto-recompute if user hasn't manually changed next date
+      if (!nextDateTouched && form.startDate) {
+        const autoNext = calculateNextBillingDateFromStart(new Date(form.startDate), new Date(), value as BillingCycle)
+        setForm(prev => ({ ...prev, nextBillingDate: autoNext }))
+      }
+    }
   }
 
 
@@ -132,17 +146,19 @@ export function SubscriptionForm({
       return
     }
 
-    // Calculate next billing date based on start date, current date and billing cycle
-    const nextBillingDate = calculateNextBillingDateFromStart(
-      new Date(form.startDate),
-      new Date(),
-      form.billingCycle
-    )
+    // Use user's chosen nextBillingDate; if empty, compute default
+    const computedNext = form.nextBillingDate && form.nextBillingDate.length > 0
+      ? form.nextBillingDate
+      : calculateNextBillingDateFromStart(
+          new Date(form.startDate),
+          new Date(),
+          form.billingCycle
+        )
 
-    // Submit the form with calculated next billing date
+    // Submit with nextBillingDate
     onSubmit({
       ...form,
-      nextBillingDate
+      nextBillingDate: computedNext
     })
     onOpenChange(false)
   }
@@ -236,7 +252,31 @@ export function SubscriptionForm({
                 value={form.startDate ? new Date(form.startDate) : undefined}
                 onChange={(date) => {
                   if (date) {
-                    handleFieldChange('startDate', format(date, "yyyy-MM-dd"), setForm, errors, setErrors)
+                    const newStart = format(date, "yyyy-MM-dd")
+                    // Update startDate
+                    handleFieldChange('startDate', newStart, setForm, errors, setErrors)
+                    // Auto-recompute default nextBillingDate only if user hasn't manually changed it
+                    if (!nextDateTouched) {
+                      const autoNext = calculateNextBillingDateFromStart(new Date(newStart), new Date(), form.billingCycle)
+                      setForm(prev => ({
+                        ...prev,
+                        nextBillingDate: autoNext
+                      }))
+                    }
+                  }
+                }}
+                placeholder={t('common:pickDate')}
+              />
+            </FormField>
+
+            {/* Next Billing Date */}
+            <FormField label={t('subscription:nextPayment')}>
+              <DatePicker
+                value={form.nextBillingDate ? new Date(form.nextBillingDate) : undefined}
+                onChange={(date) => {
+                  if (date) {
+                    setNextDateTouched(true)
+                    handleFieldChange('nextBillingDate', format(date, "yyyy-MM-dd"), setForm, errors, setErrors)
                   }
                 }}
                 placeholder={t('common:pickDate')}

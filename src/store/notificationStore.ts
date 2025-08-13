@@ -36,7 +36,7 @@ const initialState = {
 
 export const useNotificationStore = create<NotificationConfigState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
       
       setTelegramConfig: (config) => {

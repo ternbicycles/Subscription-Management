@@ -19,7 +19,7 @@ export function LanguageSwitcher() {
     // 同步到后端设置
     try {
       await apiClient.put('/user-preferences/language', { language });
-    } catch (err) {
+    } catch {
       // 后端失败不阻塞前端切换
       // 可选：在此加入 toast 提示
     }

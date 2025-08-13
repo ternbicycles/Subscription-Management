@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,11 +34,7 @@ export function SchedulerSettings() {
     { value: 'UTC', label: t('scheduler.timezones.UTC') }
   ];
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [settingsData, statusData] = await Promise.all([
@@ -53,7 +49,11 @@ export function SchedulerSettings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSave = async () => {
     setSaving(true);
