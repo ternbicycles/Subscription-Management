@@ -56,6 +56,8 @@
 - ✅ **支付历史追踪** - 完整的支付记录和历史分析
 - ✅ **数据导入导出** - CSV、Json格式数据导入导出
 - ✅ **主题切换** - 支持浅色/深色/系统主题
+- ✅ **国际化支持 (i18n)** - 多语言支持，包含中英文界面
+- ✅ **智能通知系统** - 集成Telegram的智能通知提醒系统
 
 ## 🛠 技术栈
 
@@ -67,6 +69,7 @@
 - **路由**: React Router
 - **图表**: Recharts
 - **UI组件**: Radix UI
+- **国际化**: React i18next + i18next-browser-languagedetector
 
 ### 后端
 - **运行时**: Node.js
@@ -74,6 +77,7 @@
 - **数据库**: SQLite + better-sqlite3
 - **定时任务**: node-cron
 - **API认证**: API Key
+- **通知服务**: Telegram Bot API + 邮件通知（规划中）
 
 ### 部署
 - **容器化**: Docker + Docker Compose
@@ -175,20 +179,34 @@ npm run dev
 创建 `.env` 文件并配置以下变量：
 
 ```bash
-# API安全密钥 (必需)
+# API安全密钥 (所有受保护接口必需)
 API_KEY=your_secret_api_key_here
 
 # 服务端口 (可选，默认3001)
 PORT=3001
 
 # 基础货币 (可选，默认CNY)
+# 支持的货币: USD, EUR, GBP, CNY, JPY, CAD, AUD, TRY
 BASE_CURRENCY=CNY
-
-# 天行数据API密钥 (可选，用于汇率更新)
-TIANAPI_KEY=your_tianapi_key_here
 
 # 数据库路径 (Docker部署时使用)
 DATABASE_PATH=/app/data/database.sqlite
+
+# 天行数据API密钥 (可选，用于实时汇率更新)
+# 获取密钥: https://www.tianapi.com/
+TIANAPI_KEY=your_tianapi_key_here
+
+# Telegram机器人令牌 (Telegram通知必需)
+# 从Telegram的@BotFather获取
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# 通知设置
+NOTIFICATION_DEFAULT_CHANNELS=["telegram"]
+NOTIFICATION_DEFAULT_LANGUAGE=zh-CN
+SCHEDULER_TIMEZONE=Asia/Shanghai
+SCHEDULER_CHECK_TIME=09:00
+NOTIFICATION_DEFAULT_ADVANCE_DAYS=7
+NOTIFICATION_DEFAULT_REPEAT_NOTIFICATION=false
 ```
 
 ### 数据库管理

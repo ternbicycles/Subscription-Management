@@ -18,12 +18,13 @@ module.exports = {
 
   // 默认通知渠道
   DEFAULT_NOTIFICATION_CHANNELS: JSON.parse(
-    process.env.DEFAULT_NOTIFICATION_CHANNELS || '["telegram"]'
+    process.env.NOTIFICATION_DEFAULT_CHANNELS ||
+    '["telegram"]'
   ),
 
   // 语言设置
   SUPPORTED_LANGUAGES: ['zh-CN', 'en'],
-  DEFAULT_LANGUAGE: process.env.DEFAULT_LANGUAGE || 'zh-CN',
+  DEFAULT_LANGUAGE: process.env.NOTIFICATION_DEFAULT_LANGUAGE || 'zh-CN',
 
   // 时区设置
   SUPPORTED_TIMEZONES: [
@@ -37,14 +38,14 @@ module.exports = {
     'Europe/Paris',
     'UTC'
   ],
-  DEFAULT_TIMEZONE: process.env.DEFAULT_TIMEZONE || 'Asia/Shanghai',
+  DEFAULT_TIMEZONE: process.env.SCHEDULER_TIMEZONE || 'Asia/Shanghai',
 
   // 调度器设置
-  DEFAULT_CHECK_TIME: process.env.DEFAULT_CHECK_TIME || '09:00',
+  DEFAULT_CHECK_TIME: process.env.SCHEDULER_CHECK_TIME || '09:00',
 
   // 通知设置默认值
-  DEFAULT_ADVANCE_DAYS: parseInt(process.env.DEFAULT_ADVANCE_DAYS) || 7,
-  DEFAULT_REPEAT_NOTIFICATION: process.env.DEFAULT_REPEAT_NOTIFICATION === 'true',
+  DEFAULT_ADVANCE_DAYS: parseInt(process.env.NOTIFICATION_DEFAULT_ADVANCE_DAYS) || 7,
+  DEFAULT_REPEAT_NOTIFICATION: (process.env.NOTIFICATION_DEFAULT_REPEAT_NOTIFICATION) === 'true',
 
   // 分页设置
   DEFAULT_PAGE_SIZE: parseInt(process.env.DEFAULT_PAGE_SIZE) || 20,

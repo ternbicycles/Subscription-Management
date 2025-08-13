@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { calculateNextBillingDateFromStart } from "@/lib/subscription-utils"
-import { Subscription, useSubscriptionStore } from "@/store/subscriptionStore"
+import { Subscription, BillingCycle, useSubscriptionStore } from "@/store/subscriptionStore"
 
 // Form components
 import { FormField } from "./form/FormField"
