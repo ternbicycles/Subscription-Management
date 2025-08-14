@@ -156,13 +156,12 @@ class NotificationController {
      */
     getChannelConfig = (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
             const channelType = req.params.channelType;
 
-            const config = this.notificationService.getChannelConfig(userId, channelType);
-            
+            const config = this.notificationService.getChannelConfig(channelType);
+
             if (!config) {
-                return responseHelper.notFound(res, 'Channel configuration not found');
+                return responseHelper.notFound(res, 'Channel configuration');
             }
 
             responseHelper.success(res, config);
