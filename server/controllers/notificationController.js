@@ -19,8 +19,7 @@ class NotificationController {
      */
     getSettings = (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
-            const settings = this.notificationService.getNotificationSettings(userId, req.params.type);
+            const settings = this.notificationService.getNotificationSettings(req.params.type);
             
             if (!settings) {
                 return responseHelper.notFound(res, 'Notification settings not found');
@@ -38,15 +37,13 @@ class NotificationController {
      */
     getAllSettings = (req, res) => {
         try {
-            const userId = parseInt(req.params.userId) || 1;
             const db = this.notificationService.db;
 
             const query = `
                 SELECT * FROM notification_settings
-                WHERE user_id = ?
                 ORDER BY notification_type
             `;
-            const settings = db.prepare(query).all(userId);
+            const settings = db.prepare(query).all();
 
             // Parse JSON fields
             const parsedSettings = settings.map(setting => ({
@@ -215,10 +212,9 @@ class NotificationController {
                 return responseHelper.badRequest(res, validator.getErrors());
             }
 
-            const { user_id, subscription_id, notification_type, channels } = notificationData;
+            const { subscription_id, notification_type, channels } = notificationData;
 
             const result = await this.notificationService.sendNotification({
-                userId: user_id || 1,
                 subscriptionId: subscription_id,
                 notificationType: notification_type,
                 channels

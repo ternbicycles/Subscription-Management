@@ -450,9 +450,6 @@ function validateSendNotification(data) {
             'trial_ending'
         ])
 
-        .integer(data.user_id, 'user_id')
-        .range(data.user_id, 'user_id', 1)
-
         .array(data.channels, 'channels')
         .custom(data.channels, 'channels',
             (channels) => !channels || channels.every(channel => ['telegram', 'email', 'webhook'].includes(channel)),

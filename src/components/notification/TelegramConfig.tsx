@@ -82,7 +82,7 @@ export const TelegramConfig: React.FC<TelegramConfigProps> = ({ userId, onConfig
       setLoading(true);
       const response = await notificationApi.getChannelConfig('telegram');
       if (response) {
-        // 后端返回的配置结构：{ id, user_id, channel_type, channel_config, config, is_active, ... }
+        // 后端返回的配置结构：{ id, channel_type, channel_config, config, is_active, ... }
         // config 字段是解析后的 JSON 对象，channel_config 是原始 JSON 字符串
         const configData = (response as unknown as ConfigResponse).config || {};
         const chatId = (configData as TelegramConfigData).chat_id || '';

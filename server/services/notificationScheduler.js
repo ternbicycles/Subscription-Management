@@ -83,7 +83,7 @@ class NotificationScheduler {
             const query = `
                 SELECT notification_check_time, timezone, is_enabled
                 FROM scheduler_settings
-                WHERE user_id = 1
+                WHERE id = 1
             `;
             const result = this.db.prepare(query).get();
 
@@ -153,15 +153,12 @@ class NotificationScheduler {
      */
     async getRenewalNotifications() {
         try {
-            // Since subscriptions table doesn't have user_id, we use a cross join approach
-            // assuming all subscriptions belong to user_id = 1 (single user system)
             // Find subscriptions that will expire within the advance_days period (1 to advance_days from now)
             let query = `
                 SELECT s.*, ns.advance_days, ns.notification_channels, ns.repeat_notification, 'renewal_reminder' as notification_type
                 FROM subscriptions s
                 CROSS JOIN notification_settings ns
-                WHERE ns.user_id = 1
-                    AND ns.notification_type = 'renewal_reminder'
+                WHERE ns.notification_type = 'renewal_reminder'
                     AND ns.is_enabled = 1
                     AND s.status = 'active'
                     AND s.next_billing_date BETWEEN date('now', '+1 day') AND date('now', '+' || ns.advance_days || ' days')
@@ -190,16 +187,13 @@ class NotificationScheduler {
      */
     async getExpirationNotifications() {
         try {
-            // Since subscriptions table doesn't have user_id, we use a cross join approach
-            // assuming all subscriptions belong to user_id = 1 (single user system)
             // Find subscriptions that expired exactly yesterday (next_billing_date = yesterday)
             // This ensures we only send expiration warning once, on the first day after expiration
             const query = `
                 SELECT s.*, ns.notification_channels, 'expiration_warning' as notification_type
                 FROM subscriptions s
                 CROSS JOIN notification_settings ns
-                WHERE ns.user_id = 1
-                    AND ns.notification_type = 'expiration_warning'
+                WHERE ns.notification_type = 'expiration_warning'
                     AND ns.is_enabled = 1
                     AND s.status = 'active'
                     AND s.next_billing_date = date('now', '-1 day')
@@ -225,7 +219,6 @@ class NotificationScheduler {
     async sendNotification(subscription) {
         try {
             const result = await this.notificationService.sendNotification({
-                userId: 1, // Default user ID since subscriptions don't have user_id field
                 subscriptionId: subscription.id,
                 notificationType: subscription.notification_type,
                 channels: JSON.parse(subscription.notification_channels || '["telegram"]')
@@ -257,7 +250,7 @@ class NotificationScheduler {
             const query = `
                 UPDATE scheduler_settings
                 SET notification_check_time = ?, timezone = ?, is_enabled = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE user_id = 1
+                WHERE id = 1
             `;
 
             const result = this.db.prepare(query).run(
@@ -269,7 +262,7 @@ class NotificationScheduler {
             if (result.changes === 0) {
                 // 如果没有更新任何行，说明记录不存在，需要插入
                 const insertQuery = `
-                    INSERT INTO scheduler_settings (user_id, notification_check_time, timezone, is_enabled)
+                    INSERT INTO scheduler_settings (id, notification_check_time, timezone, is_enabled)
                     VALUES (1, ?, ?, ?)
                 `;
                 this.db.prepare(insertQuery).run(

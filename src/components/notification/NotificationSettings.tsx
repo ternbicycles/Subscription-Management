@@ -24,7 +24,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await notificationApi.getSettings(userId);
+      const response = await notificationApi.getSettings();
       // The API client already extracts the data field, so response is the data directly
       setSettings(Array.isArray(response) ? response : []);
     } catch (error) {
@@ -39,7 +39,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ user
     } finally {
       setLoading(false);
     }
-  }, [userId, t, toast]);
+  }, [t, toast]);
 
   useEffect(() => {
     loadSettings();

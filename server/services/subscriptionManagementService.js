@@ -41,7 +41,6 @@ class SubscriptionManagementService extends BaseRepository {
                             // 发送续订失败通知（异步触发，不阻塞批处理）
                             this.notificationService
                                 .sendNotification({
-                                    userId: 1, // 默认用户ID，可以根据需要修改
                                     subscriptionId: subscription.id,
                                     notificationType: 'renewal_failure'
                                 })
@@ -166,7 +165,6 @@ class SubscriptionManagementService extends BaseRepository {
                 // 发送手动续订失败通知（异步触发，不阻塞请求）
                 this.notificationService
                     .sendNotification({
-                        userId: 1, // 默认用户ID，可以根据需要修改
                         subscriptionId: subscription.id,
                         notificationType: 'renewal_failure'
                     })
@@ -350,7 +348,6 @@ class SubscriptionManagementService extends BaseRepository {
                 // 发送续订成功通知（异步触发，不阻塞请求）
                 this.notificationService
                     .sendNotification({
-                        userId: 1, // 默认用户ID，可以根据需要修改
                         subscriptionId: subscription.id,
                         notificationType: 'renewal_success'
                     })

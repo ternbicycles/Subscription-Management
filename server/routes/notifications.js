@@ -18,8 +18,8 @@ function createProtectedNotificationRoutes(db) {
     const notificationController = new NotificationController();
 
     // 通知设置路由
-    router.get('/settings/:userId', notificationController.getAllSettings);
-    router.get('/settings/:userId/:type', notificationController.getSettings);
+    router.get('/settings', notificationController.getAllSettings);
+    router.get('/settings/:type', notificationController.getSettings);
     router.put('/settings/:id', notificationController.updateSetting);
 
     // 渠道配置路由

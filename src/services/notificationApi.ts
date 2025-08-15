@@ -2,7 +2,6 @@ import { apiClient } from '@/utils/api-client';
 
 export interface NotificationSetting {
   id: number;
-  user_id: number;
   notification_type: string;
   is_enabled: boolean;
   advance_days: number;
@@ -14,7 +13,6 @@ export interface NotificationSetting {
 
 export interface NotificationChannel {
   id: number;
-  user_id: number;
   channel_type: string;
   channel_config: Record<string, unknown>;
   config?: Record<string, unknown>; // Parsed config object
@@ -26,7 +24,6 @@ export interface NotificationChannel {
 
 export interface NotificationHistory {
   id: number;
-  user_id: number;
   subscription_id: number;
   notification_type: string;
   channel_type: string;
@@ -69,8 +66,8 @@ export interface TelegramConfigStatus {
 
 export const notificationApi = {
   // 获取通知设置
-  getSettings: (userId: number) =>
-    apiClient.get<NotificationSetting[]>(`/protected/notifications/settings/${userId}`),
+  getSettings: () =>
+    apiClient.get<NotificationSetting[]>(`/protected/notifications/settings`),
 
   // 更新通知设置
   updateSetting: (settingId: number, setting: Partial<NotificationSetting>) =>
@@ -95,7 +92,6 @@ export const notificationApi = {
 
   // 发送通知
   sendNotification: (data: {
-    user_id?: number;
     subscription_id: number;
     notification_type: string;
     channels?: string[];
