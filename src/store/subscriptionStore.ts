@@ -2,8 +2,39 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { convertCurrency } from '@/utils/currency'
 import { useSettingsStore } from './settingsStore'
-import { isSubscriptionDue, processSubscriptionRenewal } from '@/lib/subscription-utils'
+
 import { apiClient } from '@/utils/api-client'
+
+interface SubscriptionApiData {
+  id: number
+  name: string
+  plan: string
+  billing_cycle: string
+  next_billing_date: string
+  last_billing_date?: string | null
+  amount: number
+  currency: string
+  payment_method_id: number
+  start_date: string
+  status: string
+  category_id: number
+  renewal_type: string
+  notes: string
+  website?: string
+  category?: { id: number; value: string; label: string }
+  paymentMethod?: { id: number; value: string; label: string }
+}
+
+interface RenewalData {
+  subscriptionId: number
+  previousBillingDate: string
+  newBillingDate: string
+  amount: number
+  currency: string
+  renewedAt: string
+}
+
+
 
 // Helper to calculate the last billing date from the next one
 const calculateLastBillingDate = (nextBillingDate: string, billingCycle: BillingCycle): string => {
@@ -24,32 +55,32 @@ const calculateLastBillingDate = (nextBillingDate: string, billingCycle: Billing
 
 
 // Helper function to transform data from API (snake_case) to frontend (camelCase)
-const transformFromApi = (sub: any): Subscription => {
+const transformFromApi = (sub: SubscriptionApiData): Subscription => {
   return {
     id: sub.id,
     name: sub.name,
     plan: sub.plan,
-    billingCycle: sub.billing_cycle,
+    billingCycle: validateBillingCycle(sub.billing_cycle),
     nextBillingDate: sub.next_billing_date,
     lastBillingDate: sub.last_billing_date,
     amount: sub.amount,
     currency: sub.currency,
     paymentMethodId: sub.payment_method_id,
     startDate: sub.start_date,
-    status: sub.status,
+    status: validateStatus(sub.status),
     categoryId: sub.category_id,
-    renewalType: sub.renewal_type || 'manual',
+    renewalType: validateRenewalType(sub.renewal_type),
     notes: sub.notes,
     website: sub.website,
     // Optional display fields populated by joins
-    paymentMethod: sub.payment_method,
+    paymentMethod: sub.paymentMethod,
     category: sub.category,
   }
 }
 
 // Helper function to transform data from frontend (camelCase) to API (snake_case)
-const transformToApi = (sub: Partial<Subscription>) => {
-  const result: any = {}
+export const transformToApi = (sub: Partial<Subscription>) => {
+  const result: Record<string, unknown> = {}
   if (sub.name !== undefined) result.name = sub.name
   if (sub.plan !== undefined) result.plan = sub.plan
   if (sub.billingCycle !== undefined) result.billing_cycle = sub.billingCycle
@@ -72,6 +103,28 @@ export type BillingCycle = 'monthly' | 'yearly' | 'quarterly'
 export type RenewalType = 'auto' | 'manual'
 // Updated to allow custom categories
 export type SubscriptionCategory = 'video' | 'music' | 'software' | 'cloud' | 'news' | 'game' | 'other' | string
+
+// Helper functions to validate and cast enum types from API
+const validateStatus = (status: string): SubscriptionStatus => {
+  if (status === 'active' || status === 'trial' || status === 'cancelled') {
+    return status as SubscriptionStatus
+  }
+  return 'active' // default fallback
+}
+
+const validateBillingCycle = (billingCycle: string): BillingCycle => {
+  if (billingCycle === 'monthly' || billingCycle === 'yearly' || billingCycle === 'quarterly') {
+    return billingCycle as BillingCycle
+  }
+  return 'monthly' // default fallback
+}
+
+const validateRenewalType = (renewalType: string | null): RenewalType => {
+  if (renewalType === 'auto' || renewalType === 'manual') {
+    return renewalType as RenewalType
+  }
+  return 'manual' // default fallback
+}
 
 export interface Subscription {
   id: number // Changed from string to number
@@ -123,10 +176,10 @@ interface SubscriptionState {
   error: string | null
 
   // CRUD operations
-  addSubscription: (subscription: Omit<Subscription, 'id' | 'lastBillingDate'>) => Promise<{ error: any | null }>
-  bulkAddSubscriptions: (subscriptions: Omit<Subscription, 'id' | 'lastBillingDate'>[]) => Promise<{ error: any | null }>
-  updateSubscription: (id: number, subscription: Partial<Subscription>) => Promise<{ error: any | null }>
-  deleteSubscription: (id: number) => Promise<{ error: any | null }>
+  addSubscription: (subscription: Omit<Subscription, 'id' | 'lastBillingDate'>) => Promise<{ error: unknown | null }>
+  bulkAddSubscriptions: (subscriptions: Omit<Subscription, 'id' | 'lastBillingDate'>[]) => Promise<{ error: unknown | null }>
+  updateSubscription: (id: number, subscription: Partial<Subscription>) => Promise<{ error: unknown | null }>
+  deleteSubscription: (id: number) => Promise<{ error: unknown | null }>
   resetSubscriptions: () => void
   fetchSubscriptions: () => Promise<void>
   fetchCategories: () => Promise<void>
@@ -135,7 +188,7 @@ interface SubscriptionState {
   // Renewal operations
   processAutoRenewals: (skipRefresh?: boolean) => Promise<{ processed: number; errors: number }>
   processExpiredSubscriptions: (skipRefresh?: boolean) => Promise<{ processed: number; errors: number }>
-  manualRenewSubscription: (id: number) => Promise<{ error: any | null; renewalData: any | null }>
+  manualRenewSubscription: (id: number) => Promise<{ error: unknown | null; renewalData: unknown | null }>
 
   // Combined initialization
   initializeWithRenewals: () => Promise<void>
@@ -219,13 +272,14 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       fetchSubscriptions: async () => {
         set({ isLoading: true, error: null })
         try {
-          const data = await apiClient.get<any[]>('/subscriptions')
+          const data = await apiClient.get<SubscriptionApiData[]>('/subscriptions')
 
           const transformedData = data.map(transformFromApi)
           set({ subscriptions: transformedData, isLoading: false })
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error fetching subscriptions:', error)
-          set({ error: error.message, isLoading: false, subscriptions: [] }) // Clear subscriptions on error
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage, isLoading: false, subscriptions: [] }) // Clear subscriptions on error
         }
       },
 
@@ -267,9 +321,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           // Refetch all subscriptions to get the new one with its DB-generated ID
           await get().fetchSubscriptions()
           return { error: null }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error adding subscription:', error)
-          set({ error: error.message })
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage })
           return { error }
         }
       },
@@ -292,9 +347,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
           await get().fetchSubscriptions();
           return { error: null };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error bulk adding subscriptions:', error);
-          set({ error: error.message });
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage });
           return { error };
         }
       },
@@ -318,10 +374,11 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           // Refetch to ensure data consistency
           await get().fetchSubscriptions()
           return { error: null }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error updating subscription:', error)
-          set({ error: error.message })
-          return { error }
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage })
+          return { error: errorMessage }
         }
       },
       
@@ -333,10 +390,11 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           // Refetch to reflect the deletion
           await get().fetchSubscriptions()
           return { error: null }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error deleting subscription:', error)
-          set({ error: error.message })
-          return { error }
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage })
+          return { error: errorMessage }
         }
       },
 
@@ -348,10 +406,11 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           // Refetch to ensure the UI is cleared
           await get().fetchSubscriptions();
           return { error: null };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error resetting subscriptions:', error);
-          set({ error: error.message });
-          return { error };
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+          set({ error: errorMessage });
+          return { error: errorMessage };
         }
       },
       
@@ -617,7 +676,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           }
 
           return { processed: result.processed, errors: result.errors }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error processing auto renewals:', error)
           return { processed: 0, errors: 1 }
         }
@@ -641,7 +700,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
           }
 
           return { processed: result.processed, errors: result.errors }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error processing expired subscriptions:', error)
           return { processed: 0, errors: 1 }
         }
@@ -656,15 +715,16 @@ export const useSubscriptionStore = create<SubscriptionState>()(
             throw new Error('API key not configured. Please set your API key in Settings.')
           }
 
-          const result = await apiClient.post<{ renewalData: any }>(`/protected/subscriptions/${id}/manual-renew`)
+          const result = await apiClient.post<{ renewalData: RenewalData }>(`/protected/subscriptions/${id}/manual-renew`)
 
           // Refresh subscriptions to get updated data
           await get().fetchSubscriptions()
 
           return { error: null, renewalData: result.renewalData }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error renewing subscription:', error)
-          return { error: error.message, renewalData: null }
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          return { error: errorMessage, renewalData: null }
         }
       },
 
@@ -679,9 +739,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
             get().fetchPaymentMethods()
           ])
           set({ isLoading: false })
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error during initialization:', error)
-          set({ error: error.message, isLoading: false })
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage, isLoading: false })
         }
       },
 
@@ -721,9 +782,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
             console.warn(`Failed to cancel ${expiredResult.errors} expired subscription(s)`)
           }
           set({ isLoading: false })
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error during initialization:', error)
-          set({ error: error.message, isLoading: false })
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+          set({ error: errorMessage, isLoading: false })
         }
       }
     }),

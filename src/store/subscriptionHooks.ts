@@ -1,5 +1,9 @@
 import { useMemo } from 'react'
-import { useSubscriptionStore } from './subscriptionStore'
+import { useSubscriptionStore, type Subscription } from './subscriptionStore'
+
+interface SubscriptionStoreState {
+  subscriptions: Subscription[]
+}
 import { useSettingsStore } from './settingsStore'
 import { convertCurrency } from '@/utils/currency'
 
@@ -123,11 +127,11 @@ export const useRecentlyPaid = (days: number = 7) => {
 }
 
 // Selector functions for optimized state access
-export const selectActiveSubscriptions = (state: any) =>
-  state.subscriptions.filter((sub: any) => sub.status === 'active')
+export const selectActiveSubscriptions = (state: SubscriptionStoreState) =>
+  state.subscriptions.filter((sub: Subscription) => sub.status === 'active')
 
-export const selectSubscriptionById = (id: number) => (state: any) =>
-  state.subscriptions.find((sub: any) => sub.id === id)
+export const selectSubscriptionById = (id: number) => (state: SubscriptionStoreState) =>
+  state.subscriptions.find((sub: Subscription) => sub.id === id)
 
-export const selectSubscriptionsByCategory = (categoryId: number) => (state: any) =>
-  state.subscriptions.filter((sub: any) => sub.categoryId === categoryId)
+export const selectSubscriptionsByCategory = (categoryId: number) => (state: SubscriptionStoreState) =>
+  state.subscriptions.filter((sub: Subscription) => sub.categoryId === categoryId)

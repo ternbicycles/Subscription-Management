@@ -7,7 +7,7 @@ export interface Subscription {
   price: number;
   currency: string;
   billingCycle: 'monthly' | 'quarterly' | 'yearly';
-  status: 'active' | 'inactive' | 'cancelled';
+  status: 'active' | 'trial' | 'cancelled';
   nextBillingDate?: string;
   lastBillingDate?: string;
   createdAt: string;
@@ -102,7 +102,7 @@ export interface DateRange {
 }
 
 // Currency types
-export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CNY' | 'JPY' | 'KRW' | 'CAD' | 'AUD' | 'INR';
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'CNY' | 'JPY' | 'KRW' | 'CAD' | 'AUD' | 'INR' | 'TRY';
 
 // Chart data types
 export interface ChartDataPoint {
@@ -114,5 +114,5 @@ export interface ChartDataPoint {
 export interface TrendDataPoint {
   period: string;
   amount: number;
-  [key: string]: any; // For category data
+  [key: string]: unknown; // For category data
 }

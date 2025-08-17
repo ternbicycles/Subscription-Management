@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -9,10 +10,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 
 import { formatCurrencyAmount } from "@/utils/currency"
-import { transformPaymentsFromApi, type PaymentRecord } from '@/utils/dataTransform'
+import { transformPaymentsFromApi, type PaymentRecord, type PaymentRecordApi } from '@/utils/dataTransform'
 import { apiClient } from '@/utils/api-client'
 import { formatDateDisplay } from '@/utils/date'
 import {
@@ -26,26 +27,8 @@ import {
 } from "lucide-react"
 import { ExpenseInfoData } from "./ExpenseInfoCards"
 
-
-
-
-
-
-interface PaymentHistoryResponse {
-  payments: PaymentRecord[]
-  pagination: {
-    total: number
-    limit: number
-    offset: number
-    hasMore: boolean
-  }
-  filters: {
-    startDate: string | null
-    endDate: string | null
-    status: string | null
-    currency: string | null
-  }
-}
+// The API client already extracts the data field, so we get the array directly
+type PaymentHistoryApiResponse = PaymentRecordApi[]
 
 interface ExpenseDetailDialogProps {
   isOpen: boolean
@@ -54,29 +37,17 @@ interface ExpenseDetailDialogProps {
 }
 
 export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDetailDialogProps) {
+  const { t } = useTranslation(['reports', 'common'])
   const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalRecords, setTotalRecords] = useState(0)
-  
+
+
   const pageSize = 10
 
-  // Fetch payment data when dialog opens
-  useEffect(() => {
-    if (isOpen && periodData) {
-      fetchPaymentData()
-    }
-  }, [isOpen, periodData])
-
-  // Reset current page when search term changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm])
-
-  const fetchPaymentData = async () => {
+  const fetchPaymentData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -91,10 +62,8 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
         const startDateStr = startDate.toISOString().split('T')[0]
         const endDateStr = endDate.toISOString().split('T')[0]
 
-        const response = await apiClient.get<any>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
-        const rawData = response.payments || response.data || response || []
+        const rawData = await apiClient.get<PaymentHistoryApiResponse>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
         allPaymentDetails = transformPaymentsFromApi(rawData)
-
       } else {
         // 季度或年度数据：直接从 payment-history API 获取整个时间范围的数据
         const startDate = new Date(periodData.startDate)
@@ -103,20 +72,29 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
         const startDateStr = startDate.toISOString().split('T')[0]
         const endDateStr = endDate.toISOString().split('T')[0]
 
-        const response = await apiClient.get<any>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
-        const rawData = response.payments || response.data || response || []
+        const rawData = await apiClient.get<PaymentHistoryApiResponse>(`/payment-history?start_date=${startDateStr}&end_date=${endDateStr}&status=succeeded`)
         allPaymentDetails = transformPaymentsFromApi(rawData)
       }
 
       setPayments(allPaymentDetails)
-      setTotalRecords(allPaymentDetails.length)
-      setTotalPages(Math.ceil(allPaymentDetails.length / pageSize))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load payment data')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [periodData])
+
+  // Fetch payment data when dialog opens
+  useEffect(() => {
+    if (isOpen && periodData) {
+      fetchPaymentData()
+    }
+  }, [isOpen, periodData, fetchPaymentData])
+
+  // Reset current page when search term changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
 
   // Filter payments based on search term
   const filteredPayments = payments.filter(payment =>
@@ -155,10 +133,10 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            {periodData.period} - Payment Details
+            {periodData.period} - {t('reports:chart.paymentDetails')}
           </DialogTitle>
           <DialogDescription>
-            View all payment records for this period
+            {t('reports:chart.viewPaymentRecords')}
           </DialogDescription>
         </DialogHeader>
 
@@ -169,7 +147,7 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-sm text-muted-foreground">{t('reports:chart.total')}</p>
                   <p className="font-semibold">{formatCurrencyAmount(periodData.totalSpent, periodData.currency)}</p>
                 </div>
               </div>
@@ -181,7 +159,7 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Payments</p>
+                  <p className="text-sm text-muted-foreground">{t('reports:chart.payments')}</p>
                   <p className="font-semibold">
                     {payments.length}
                   </p>
@@ -195,7 +173,7 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
               <div className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Daily Avg</p>
+                  <p className="text-sm text-muted-foreground">{t('reports:chart.dailyAvg')}</p>
                   <p className="font-semibold">{formatCurrencyAmount(periodData.dailyAverage, periodData.currency)}</p>
                 </div>
               </div>
@@ -210,7 +188,7 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search subscriptions..."
+              placeholder={t('reports:chart.searchSubscriptions')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -224,18 +202,18 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
             {isLoading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2">Loading payments...</span>
+                <span className="ml-2">{t('common:loadingPayments')}</span>
               </div>
             ) : error ? (
               <div className="text-center text-destructive p-4">
-                <p>Error loading payments: {error}</p>
+                <p>{t('reports:chart.errorLoadingPayments')}: {error}</p>
                 <Button variant="outline" onClick={fetchPaymentData} className="mt-2">
-                  Retry
+                  {t('common:retry')}
                 </Button>
               </div>
             ) : filteredPayments.length === 0 ? (
               <div className="text-center text-muted-foreground p-4">
-                No payments found for this period
+                {t('reports:chart.noPaymentsFoundPeriod')}
               </div>
             ) : (
               paginatedPayments.map((payment, index) => (
@@ -248,12 +226,12 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium">{payment.subscriptionName || 'Unknown Subscription'}</h4>
+                          <h4 className="font-medium">{payment.subscriptionName || t('reports:chart.unknownSubscription')}</h4>
                           <Badge variant="secondary" className="text-xs">
-                            {payment.subscriptionPlan || 'Unknown Plan'}
+                            {payment.subscriptionPlan || t('reports:chart.unknownPlan')}
                           </Badge>
                           <Badge className={`text-xs ${getStatusColor(payment.status || 'unknown')}`}>
-                            {payment.status || 'Unknown'}
+                            {payment.status || t('reports:chart.unknown')}
                           </Badge>
                           {payment.billingCycle && payment.billingCycle !== 'monthly' && (
                             <Badge variant="outline" className="text-xs">
@@ -262,14 +240,14 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
                           )}
                           {(payment.billingCycle === 'yearly' || payment.billingCycle === 'quarterly') && (
                             <Badge variant="outline" className="text-xs text-orange-600 border-orange-300">
-                              Allocated
+                              {t('reports:chart.allocated')}
                             </Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Paid: {formatDateDisplay(payment.paymentDate)}</span>
+                          <span>{t('common:paid')}: {formatDateDisplay(payment.paymentDate)}</span>
                           <span>
-                            Billing: {formatDateDisplay(payment.billingPeriod?.start)} - {formatDateDisplay(payment.billingPeriod?.end)}
+                            {t('common:billing')}: {formatDateDisplay(payment.billingPeriod?.start)} - {formatDateDisplay(payment.billingPeriod?.end)}
                           </span>
                         </div>
                       </div>
@@ -291,7 +269,11 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
         {filteredTotalPages > 1 && (
           <div className="flex items-center justify-between mt-4">
             <p className="text-sm text-muted-foreground">
-              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredPayments.length)} of {filteredPayments.length} payments
+              {t('reports:chart.showingPayments', {
+                start: ((currentPage - 1) * pageSize) + 1,
+                end: Math.min(currentPage * pageSize, filteredPayments.length),
+                total: filteredPayments.length
+              })}
             </p>
             <div className="flex items-center gap-2">
               <Button
@@ -301,10 +283,13 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Previous
+                {t('common:previous')}
               </Button>
               <span className="text-sm">
-                Page {currentPage} of {filteredTotalPages}
+                {t('reports:chart.pageOf', {
+                  current: currentPage,
+                  total: filteredTotalPages
+                })}
               </span>
               <Button
                 variant="outline"
@@ -312,7 +297,7 @@ export function ExpenseDetailDialog({ isOpen, onClose, periodData }: ExpenseDeta
                 onClick={() => setCurrentPage(prev => Math.min(filteredTotalPages, prev + 1))}
                 disabled={currentPage === filteredTotalPages}
               >
-                Next
+                {t('common:next')}
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

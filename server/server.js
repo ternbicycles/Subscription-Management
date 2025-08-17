@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const ExchangeRateScheduler = require('./services/exchangeRateScheduler');
 const SubscriptionRenewalScheduler = require('./services/subscriptionRenewalScheduler');
+const NotificationScheduler = require('./services/notificationScheduler');
 
 // Load environment variables from root .env file (unified configuration)
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
@@ -21,6 +22,10 @@ const { createPaymentHistoryRoutes, createProtectedPaymentHistoryRoutes } = requ
 const { createMonthlyCategorySummaryRoutes, createProtectedMonthlyCategorySummaryRoutes } = require('./routes/monthlyCategorySummary');
 const { createCategoriesRoutes, createProtectedCategoriesRoutes, createPaymentMethodsRoutes, createProtectedPaymentMethodsRoutes } = require('./routes/categoriesAndPaymentMethods');
 const { createSubscriptionRenewalSchedulerRoutes, createProtectedSubscriptionRenewalSchedulerRoutes } = require('./routes/subscriptionRenewalScheduler');
+const { createNotificationRoutes, createProtectedNotificationRoutes } = require('./routes/notifications');
+const { createSchedulerRoutes, createProtectedSchedulerRoutes } = require('./routes/scheduler');
+const userPreferencesRoutes = require('./routes/userPreferences');
+const templatesRoutes = require('./routes/templates');
 
 const app = express();
 const port = process.env.PORT || 3001; // Use PORT from environment or default to 3001
@@ -39,6 +44,10 @@ exchangeRateScheduler.start();
 // Initialize subscription maintenance scheduler
 const subscriptionRenewalScheduler = new SubscriptionRenewalScheduler(db);
 subscriptionRenewalScheduler.start();
+
+// Initialize notification scheduler
+const notificationScheduler = new NotificationScheduler();
+notificationScheduler.start();
 
 // Serve static files from the public directory (frontend build)
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -84,6 +93,20 @@ protectedApiRouter.use('/payment-methods', createProtectedPaymentMethodsRoutes(d
 
 apiRouter.use('/subscription-renewal-scheduler', createSubscriptionRenewalSchedulerRoutes(subscriptionRenewalScheduler));
 protectedApiRouter.use('/subscription-renewal-scheduler', createProtectedSubscriptionRenewalSchedulerRoutes(subscriptionRenewalScheduler));
+
+// Notification routes
+apiRouter.use('/notifications', createNotificationRoutes(db));
+protectedApiRouter.use('/notifications', createProtectedNotificationRoutes(db));
+
+// Scheduler routes
+apiRouter.use('/scheduler', createSchedulerRoutes(notificationScheduler));
+protectedApiRouter.use('/scheduler', createProtectedSchedulerRoutes(notificationScheduler));
+
+// User preferences routes
+apiRouter.use('/user-preferences', userPreferencesRoutes);
+
+// Template routes
+apiRouter.use('/templates', templatesRoutes);
 
 // Register routers
 app.use('/api', apiRouter);

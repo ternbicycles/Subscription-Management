@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS settings (
     currency TEXT NOT NULL DEFAULT 'CNY',
     theme TEXT NOT NULL DEFAULT 'system' CHECK (theme IN ('light', 'dark', 'system')),
     show_original_currency BOOLEAN NOT NULL DEFAULT 1,
+    language TEXT NOT NULL DEFAULT 'zh-CN' CHECK (language IN ('zh-CN', 'en', 'ja', 'ko', 'fr', 'de', 'es')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -61,7 +62,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     currency TEXT NOT NULL DEFAULT 'CNY', -- Default currency from BASE_CURRENCY config
     payment_method_id INTEGER NOT NULL,
     start_date DATE,
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'cancelled')),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'trial', 'cancelled')),
     category_id INTEGER NOT NULL,
     renewal_type TEXT NOT NULL DEFAULT 'manual' CHECK (renewal_type IN ('auto', 'manual')),
     notes TEXT,
@@ -185,8 +186,8 @@ CREATE INDEX IF NOT EXISTS idx_monthly_category_summary_year_month_category ON m
 
 -- Insert default settings
 -- Note: Currency value should match BASE_CURRENCY from application config
-INSERT OR IGNORE INTO settings (id, currency, theme, show_original_currency)
-VALUES (1, 'CNY', 'system', 1);
+INSERT OR IGNORE INTO settings (id, currency, theme, show_original_currency, language)
+VALUES (1, 'CNY', 'system', 1, 'zh-CN');
 
 -- Insert default categories
 INSERT OR IGNORE INTO categories (value, label) VALUES
@@ -214,7 +215,7 @@ INSERT OR IGNORE INTO payment_methods (value, label) VALUES
 
 -- Insert default exchange rates (Base currency from application config)
 -- Note: These rates should match BASE_CURRENCY configuration
--- Only supported currencies: USD, EUR, GBP, CAD, AUD, JPY, CNY
+-- Only supported currencies: USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY
 INSERT OR IGNORE INTO exchange_rates (from_currency, to_currency, rate) VALUES
 ('CNY', 'CNY', 1.0000),
 ('CNY', 'USD', 0.1538),
@@ -222,4 +223,5 @@ INSERT OR IGNORE INTO exchange_rates (from_currency, to_currency, rate) VALUES
 ('CNY', 'GBP', 0.1154),
 ('CNY', 'JPY', 16.9231),
 ('CNY', 'CAD', 0.1923),
-('CNY', 'AUD', 0.2077);
+('CNY', 'AUD', 0.2077),
+('CNY', 'TRY', 4.2000);

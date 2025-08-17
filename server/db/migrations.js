@@ -11,6 +11,11 @@ class DatabaseMigrations {
         version: 1,
         name: 'initial_schema_consolidated',
         up: () => this.migration_001_initial_schema_consolidated()
+      },
+      {
+        version: 2,
+        name: 'add_notification_system',
+        up: () => this.migration_002_add_notification_system()
       }
     ];
   }
@@ -118,6 +123,150 @@ class DatabaseMigrations {
     }
   }
 
+  // Migration 002: Add notification system
+  migration_002_add_notification_system() {
+    console.log('📝 Adding notification system...');
+
+    // Step 1: Add language preference to settings table
+    console.log('📝 Adding language preference to settings...');
+    try {
+      this.db.exec(`
+        ALTER TABLE settings ADD COLUMN language TEXT NOT NULL DEFAULT 'zh-CN'
+        CHECK (language IN ('zh-CN', 'en', 'ja', 'ko', 'fr', 'de', 'es'));
+      `);
+    } catch (error) {
+      // Column might already exist, ignore error
+      console.log('Language column might already exist, continuing...');
+    }
+
+    // Step 2: Create notification system tables
+    console.log('📝 Creating notification system tables...');
+
+    // Create notification_settings table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS notification_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        notification_type TEXT NOT NULL UNIQUE CHECK (
+          notification_type IN (
+            'renewal_reminder', 'expiration_warning',
+            'renewal_success', 'renewal_failure', 'subscription_change'
+          )
+        ),
+        is_enabled BOOLEAN NOT NULL DEFAULT 1,
+        advance_days INTEGER DEFAULT 7,
+        repeat_notification BOOLEAN NOT NULL DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create notification_channels table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS notification_channels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        channel_type TEXT NOT NULL UNIQUE CHECK (channel_type IN ('telegram', 'email')),
+        channel_config TEXT NOT NULL,
+        is_active BOOLEAN NOT NULL DEFAULT 1,
+        last_used_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create notification_history table
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS notification_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subscription_id INTEGER NOT NULL,
+        notification_type TEXT NOT NULL,
+        channel_type TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
+        recipient TEXT NOT NULL,
+        message_content TEXT NOT NULL,
+        error_message TEXT,
+        sent_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE
+      );
+    `);
+
+    // Step 3: Create scheduler settings table
+    console.log('📝 Creating scheduler settings table...');
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS scheduler_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        notification_check_time TEXT NOT NULL DEFAULT '09:00',
+        timezone TEXT NOT NULL DEFAULT 'Asia/Shanghai',
+        is_enabled BOOLEAN NOT NULL DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Step 4: Create indexes for performance
+    console.log('📝 Creating indexes...');
+    this.db.exec(`
+      -- Notification settings indexes
+      CREATE INDEX IF NOT EXISTS idx_notification_settings_type ON notification_settings(notification_type);
+      CREATE INDEX IF NOT EXISTS idx_notification_settings_enabled ON notification_settings(is_enabled);
+
+      -- Notification channels indexes
+      CREATE INDEX IF NOT EXISTS idx_notification_channels_type ON notification_channels(channel_type);
+      CREATE INDEX IF NOT EXISTS idx_notification_channels_active ON notification_channels(is_active);
+
+      -- Notification history indexes
+      CREATE INDEX IF NOT EXISTS idx_notification_history_subscription ON notification_history(subscription_id);
+      CREATE INDEX IF NOT EXISTS idx_notification_history_status ON notification_history(status);
+      CREATE INDEX IF NOT EXISTS idx_notification_history_created ON notification_history(created_at);
+    `);
+
+    // Step 5: Create update triggers
+    console.log('📝 Creating update triggers...');
+    this.db.exec(`
+      -- notification_settings update trigger
+      CREATE TRIGGER IF NOT EXISTS notification_settings_updated_at
+      AFTER UPDATE ON notification_settings
+      FOR EACH ROW
+      BEGIN
+          UPDATE notification_settings SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+      END;
+
+      -- notification_channels update trigger
+      CREATE TRIGGER IF NOT EXISTS notification_channels_updated_at
+      AFTER UPDATE ON notification_channels
+      FOR EACH ROW
+      BEGIN
+          UPDATE notification_channels SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+      END;
+
+      -- scheduler_settings update trigger
+      CREATE TRIGGER IF NOT EXISTS scheduler_settings_updated_at
+      AFTER UPDATE ON scheduler_settings
+      FOR EACH ROW
+      BEGIN
+          UPDATE scheduler_settings SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+      END;
+    `);
+
+    // Step 6: Insert default settings
+    console.log('📝 Inserting default settings...');
+    this.db.exec(`
+      -- Insert default notification settings
+      INSERT OR IGNORE INTO notification_settings (notification_type, is_enabled, advance_days, repeat_notification) VALUES
+      ('renewal_reminder', 1, 7, 1),
+      ('expiration_warning', 1, 0, 0),
+      ('renewal_success', 1, 0, 0),
+      ('renewal_failure', 1, 0, 0),
+      ('subscription_change', 1, 0, 0);
+
+      -- Insert default scheduler settings
+      INSERT OR IGNORE INTO scheduler_settings (id, notification_check_time, timezone, is_enabled)
+      VALUES (1, '09:00', 'Asia/Shanghai', 1);
+    `);
+
+    console.log('✅ Notification system created successfully');
+  }
+
   // Helper method to parse SQL statements properly
   parseSQL(sql) {
     const statements = [];
@@ -160,6 +309,8 @@ class DatabaseMigrations {
 
     return statements;
   }
+
+
 
 
   close() {

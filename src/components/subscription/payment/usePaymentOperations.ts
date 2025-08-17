@@ -3,6 +3,17 @@ import { useToast } from "@/hooks/use-toast"
 import { useState } from 'react'
 import { useConfirmation } from '@/hooks/use-confirmation'
 
+interface PaymentApiData {
+  subscriptionId: number
+  paymentDate: string
+  amountPaid: number
+  currency: string
+  billingPeriodStart: string
+  billingPeriodEnd: string
+  status: string
+  notes?: string
+}
+
 export const usePaymentOperations = (
   apiKey: string | undefined,
   fetchPaymentHistory: () => void
@@ -10,7 +21,7 @@ export const usePaymentOperations = (
   const { toast } = useToast()
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null)
 
-  const handleAddPayment = async (paymentData: any) => {
+  const handleAddPayment = async (paymentData: PaymentApiData) => {
     if (!apiKey) {
       toast({
         title: "Error",
@@ -40,7 +51,7 @@ export const usePaymentOperations = (
     }
   }
 
-  const handleEditPayment = async (paymentId: number, paymentData: any) => {
+  const handleEditPayment = async (paymentId: number, paymentData: PaymentApiData) => {
     if (!apiKey) {
       toast({
         title: "Error",

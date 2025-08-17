@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { useSubscriptionStore } from "@/store/subscriptionStore"
 import { useSettingsStore } from "@/store/settingsStore"
 import {
@@ -14,6 +15,7 @@ interface CategoryBreakdownProps {
 }
 
 export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
+  const { t } = useTranslation('dashboard');
   // Get categories from the store for labels
   const { categories } = useSubscriptionStore()
   // Get user's preferred currency
@@ -37,14 +39,14 @@ export function CategoryBreakdown({ data }: CategoryBreakdownProps) {
   return (
     <Card className="min-h-[200px] flex flex-col">
       <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-lg">Spending by Category</CardTitle>
-        <CardDescription>Annual breakdown by category</CardDescription>
+        <CardTitle className="text-lg">{t('spendingByCategory')}</CardTitle>
+        <CardDescription>{t('annualBreakdownByCategory')}</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
         {sortedCategories.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <p className="text-muted-foreground">
-              No spending data available
+              {t('noSpendingDataAvailable')}
             </p>
           </div>
         ) : (

@@ -1,6 +1,7 @@
 const BaseRepository = require('../utils/BaseRepository');
 const { calculateLastBillingDate, calculateNextBillingDate, calculateNextBillingDateFromStart, getTodayString } = require('../utils/dateUtils');
 const MonthlyCategorySummaryService = require('./monthlyCategorySummaryService');
+const NotificationService = require('./notificationService');
 const logger = require('../utils/logger');
 const { NotFoundError } = require('../middleware/errorHandler');
 
@@ -8,6 +9,7 @@ class SubscriptionService extends BaseRepository {
     constructor(db) {
         super(db, 'subscriptions');
         this.monthlyCategorySummaryService = new MonthlyCategorySummaryService(db.name);
+        this.notificationService = new NotificationService(db);
     }
 
     /**
@@ -185,14 +187,68 @@ class SubscriptionService extends BaseRepository {
      * 批量创建订阅
      */
     async bulkCreateSubscriptions(subscriptionsData) {
-        return this.transaction(async () => {
-            const results = [];
-            for (const subscriptionData of subscriptionsData) {
-                const result = await this.createSubscription(subscriptionData);
-                results.push(result);
-            }
-            return results;
+        // Prepare subscription data for bulk insert
+        const subscriptionRecords = subscriptionsData.map(subscriptionData => {
+            const {
+                name,
+                plan,
+                billing_cycle,
+                next_billing_date,
+                amount,
+                currency,
+                payment_method_id,
+                start_date,
+                status = 'active',
+                category_id,
+                renewal_type = 'manual',
+                notes,
+                website
+            } = subscriptionData;
+
+            // Calculate last_billing_date
+            const last_billing_date = calculateLastBillingDate(
+                next_billing_date, 
+                start_date, 
+                billing_cycle
+            );
+
+            return {
+                name,
+                plan,
+                billing_cycle,
+                next_billing_date,
+                last_billing_date,
+                amount,
+                currency,
+                payment_method_id,
+                start_date,
+                status,
+                category_id,
+                renewal_type,
+                notes,
+                website
+            };
         });
+
+        // Use synchronous bulk insert
+        const results = this.createMany(subscriptionRecords);
+        
+        // Generate payment history for each created subscription (async, outside transaction)
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            const subscriptionData = subscriptionsData[i];
+            
+            if (result.lastInsertRowid) {
+                try {
+                    await this.generatePaymentHistory(result.lastInsertRowid, subscriptionData);
+                    logger.info(`Payment history generated for subscription ${result.lastInsertRowid}`);
+                } catch (error) {
+                    logger.error(`Failed to generate payment history for subscription ${result.lastInsertRowid}:`, error.message);
+                }
+            }
+        }
+
+        return results;
     }
 
     /**
@@ -209,10 +265,13 @@ class SubscriptionService extends BaseRepository {
         if (updateData.billing_cycle || updateData.next_billing_date || updateData.start_date) {
             const billing_cycle = updateData.billing_cycle || existingSubscription.billing_cycle;
             const start_date = updateData.start_date || existingSubscription.start_date;
-            let next_billing_date = updateData.next_billing_date || existingSubscription.next_billing_date;
 
-            // 如果更新了 start_date，需要重新计算 next_billing_date
-            if (updateData.start_date) {
+            // 确定 next_billing_date：若客户端明确提供，则以客户端为准；
+            // 否则当计费周期或开始日期变更时，从 start_date + billing_cycle 重新计算。
+            let next_billing_date;
+            if (updateData.next_billing_date) {
+                next_billing_date = updateData.next_billing_date;
+            } else if (updateData.start_date || updateData.billing_cycle) {
                 const currentDate = getTodayString();
                 next_billing_date = calculateNextBillingDateFromStart(
                     start_date,
@@ -220,9 +279,11 @@ class SubscriptionService extends BaseRepository {
                     billing_cycle
                 );
                 updateData.next_billing_date = next_billing_date;
+            } else {
+                next_billing_date = existingSubscription.next_billing_date;
             }
 
-            // 重新计算 last_billing_date
+            // 重新计算 last_billing_date（基于最终的 next_billing_date 与 start_date）
             updateData.last_billing_date = calculateLastBillingDate(
                 next_billing_date,
                 start_date,
@@ -244,6 +305,22 @@ class SubscriptionService extends BaseRepository {
                 logger.error(`Failed to regenerate payment history for subscription ${id}:`, error.message);
             }
         }
+
+        // 发送订阅变更通知（异步触发，不阻塞请求）
+        this.notificationService
+            .sendNotification({
+                subscriptionId: id,
+                notificationType: 'subscription_change'
+            })
+            .then(() => {
+                logger.info(`Subscription change notification dispatched for subscription ${id}`);
+            })
+            .catch((error) => {
+                logger.error(
+                    `Failed to send subscription change notification for subscription ${id}:`,
+                    error.message
+                );
+            });
 
         return result;
     }
@@ -299,7 +376,7 @@ class SubscriptionService extends BaseRepository {
             SELECT 
                 COUNT(*) as total,
                 COUNT(CASE WHEN status = 'active' THEN 1 END) as active,
-                COUNT(CASE WHEN status = 'inactive' THEN 1 END) as inactive,
+                COUNT(CASE WHEN status = 'trial' THEN 1 END) as trial,
                 COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled,
                 SUM(CASE WHEN status = 'active' THEN amount ELSE 0 END) as total_active_amount,
                 AVG(CASE WHEN status = 'active' THEN amount ELSE NULL END) as avg_active_amount
@@ -583,6 +660,9 @@ class SubscriptionService extends BaseRepository {
     close() {
         if (this.monthlyCategorySummaryService) {
             this.monthlyCategorySummaryService.close();
+        }
+        if (this.notificationService) {
+            this.notificationService.close();
         }
     }
 }

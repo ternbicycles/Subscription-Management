@@ -1,4 +1,5 @@
 import { Calendar, Edit, Trash2, MoreHorizontal } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,6 +25,7 @@ export function PaymentListItem({
   onEdit,
   onDelete
 }: PaymentListItemProps) {
+  const { t } = useTranslation(['common', 'subscription'])
   // Get status badge color
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -57,10 +59,10 @@ export function PaymentListItem({
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-3 w-3" />
-                <span>Paid: {formatDateDisplay(payment.paymentDate)}</span>
+                <span>{t('common:paid')}: {formatDateDisplay(payment.paymentDate)}</span>
               </div>
               <div className="text-sm text-muted-foreground">
-                <span className="font-medium">Billing Period:</span>
+                <span className="font-medium">{t('common:billingPeriod')}:</span>
                 <br className="sm:hidden" />
                 <span className="sm:ml-2">
                   {formatDateDisplay(payment.billingPeriod.start)} - {formatDateDisplay(payment.billingPeriod.end)}
@@ -88,7 +90,7 @@ export function PaymentListItem({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <Edit className="h-4 w-4" />
-                  Edit Payment
+                  {t('common:editPayment')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -96,7 +98,7 @@ export function PaymentListItem({
                   className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Delete Payment
+                  {t('common:deletePayment')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

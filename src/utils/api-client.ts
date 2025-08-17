@@ -1,13 +1,14 @@
-import { API_BASE_URL, getHeaders, ApiResponse, ApiError } from '@/config/api';
+import { API_BASE_URL, getHeaders, ApiError } from '@/config/api';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  body?: any;
+  body?: unknown;
   headers?: HeadersInit;
   signal?: AbortSignal;
 };
 
 class ApiClient {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pendingRequests = new Map<string, Promise<any>>();
 
   private getCacheKey(url: string, options?: RequestOptions): string {
@@ -102,11 +103,11 @@ class ApiClient {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
-  async post<T>(endpoint: string, body?: any, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T> {
+  async post<T>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'POST', body });
   }
 
-  async put<T>(endpoint: string, body?: any, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T> {
+  async put<T>(endpoint: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: 'PUT', body });
   }
 

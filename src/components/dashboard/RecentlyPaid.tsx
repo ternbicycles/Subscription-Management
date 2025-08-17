@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { HandCoins } from "lucide-react";
 import { Subscription } from "@/store/subscriptionStore";
 import { formatDate } from "@/lib/subscription-utils";
@@ -18,19 +19,21 @@ interface RecentlyPaidProps {
 }
 
 export function RecentlyPaid({ subscriptions, className }: RecentlyPaidProps) {
+  const { t } = useTranslation('dashboard');
+
   return (
     <Card className={cn("min-h-[200px] flex flex-col", className)}>
       <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-lg">Recently Paid</CardTitle>
+        <CardTitle className="text-lg">{t('recentlyPaid')}</CardTitle>
         <CardDescription>
-          Subscriptions paid in the last 7 days
+          {t('subscriptionsPaidInLast7Days')}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
         {subscriptions.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <HandCoins className="h-10 w-10 text-muted-foreground opacity-50 mb-2" />
-            <p className="text-muted-foreground">No subscriptions paid in the last 7 days</p>
+            <p className="text-muted-foreground">{t('noSubscriptionsPaidInLast7Days')}</p>
           </div>
         ) : (
           <div className="space-y-4 flex-1">
@@ -51,7 +54,7 @@ export function RecentlyPaid({ subscriptions, className }: RecentlyPaidProps) {
                       {formatWithUserCurrency(subscription.amount, subscription.currency)}
                     </div>
                     <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      Paid on: {formatDate(subscription.lastBillingDate!)}
+                      {t('paidOn')}: {formatDate(subscription.lastBillingDate!)}
                     </div>
                   </div>
                 </div>

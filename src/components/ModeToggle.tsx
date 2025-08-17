@@ -20,7 +20,7 @@ export function ModeToggle() {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
     // Also update the settings store to keep them in sync
-    await setStoreTheme(newTheme as any);
+    await setStoreTheme(newTheme as "light" | "dark" | "system");
   }
 
   // Don't render anything until mounted to prevent hydration mismatch

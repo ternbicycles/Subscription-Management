@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { useToast } from "@/hooks/use-toast"
 import { useSettingsStore } from "@/store/settingsStore"
-import { PaymentRecord, transformPaymentsFromApi } from "@/utils/dataTransform"
+import { PaymentRecord, PaymentRecordApi, transformPaymentsFromApi } from "@/utils/dataTransform"
 import { PaymentHistorySheet } from "./PaymentHistorySheet"
 import { apiClient } from '@/utils/api-client'
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -12,12 +13,27 @@ import { PaymentListItem } from "./payment/PaymentListItem"
 import { PaymentListState } from "./payment/PaymentListState"
 import { usePaymentOperations } from "./payment/usePaymentOperations"
 
+// The API client already extracts the data field, so we get the array directly
+type PaymentHistoryApiResponse = PaymentRecordApi[]
+
+interface PaymentApiData {
+  subscriptionId: number
+  paymentDate: string
+  amountPaid: number
+  currency: string
+  billingPeriodStart: string
+  billingPeriodEnd: string
+  status: string
+  notes?: string
+}
+
 interface PaymentHistorySectionProps {
   subscriptionId: number
   subscriptionName: string
 }
 
 export function PaymentHistorySection({ subscriptionId, subscriptionName }: PaymentHistorySectionProps) {
+  const { t } = useTranslation(['common', 'subscription'])
   const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,31 +45,31 @@ export function PaymentHistorySection({ subscriptionId, subscriptionName }: Paym
 
 
   // Fetch payment history for this subscription
-  const fetchPaymentHistory = async () => {
+  const fetchPaymentHistory = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await apiClient.get<any>(`/payment-history?subscription_id=${subscriptionId}`)
-      const transformedPayments = transformPaymentsFromApi(response.payments || response.data || response || [])
+      const rawData = await apiClient.get<PaymentHistoryApiResponse>(`/payment-history?subscription_id=${subscriptionId}`)
+      const transformedPayments = transformPaymentsFromApi(rawData)
       setPayments(transformedPayments)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load payment history'
       setError(errorMessage)
       toast({
-        title: "Error",
+        title: t('common:error'),
         description: errorMessage,
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [subscriptionId, toast, t])
 
   // Load payment history when component mounts
   useEffect(() => {
     fetchPaymentHistory()
-  }, [subscriptionId])
+  }, [fetchPaymentHistory])
 
   // Load payment operations hook
   const {
@@ -64,13 +80,13 @@ export function PaymentHistorySection({ subscriptionId, subscriptionName }: Paym
   } = usePaymentOperations(apiKey, fetchPaymentHistory)
 
   // Handle adding new payment
-  const handleAddPayment = async (paymentData: any) => {
+  const handleAddPayment = async (paymentData: PaymentApiData) => {
     await addPayment(paymentData)
     setShowAddForm(false)
   }
 
   // Handle editing payment
-  const handleEditPayment = async (paymentData: any) => {
+  const handleEditPayment = async (paymentData: PaymentApiData) => {
     if (!editingPayment) return
     await editPayment(editingPayment.id, paymentData)
     setEditingPayment(null)

@@ -4,10 +4,10 @@
  */
 
 // 支持的货币类型
-export type CurrencyType = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CNY' | 'TWD';
+export type CurrencyType = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'CNY' | 'TRY' | 'TWD';
 
 // 所有支持的货币列表（固定不变）
-const ALL_SUPPORTED_CURRENCIES: CurrencyType[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'TWD'];
+const ALL_SUPPORTED_CURRENCIES: CurrencyType[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'TRY', 'TWD'];
 
 // 基础货币配置 - 修改这里就能改变整个系统的基础货币
 export const BASE_CURRENCY: CurrencyType = 'CNY';
@@ -27,6 +27,7 @@ export const CURRENCY_INFO: Record<CurrencyType, { name: string; symbol: string 
   CAD: { name: 'Canadian Dollar', symbol: 'C$' },
   AUD: { name: 'Australian Dollar', symbol: 'A$' },
   JPY: { name: 'Japanese Yen', symbol: '¥' },
+  TRY: { name: 'Turkish Lira', symbol: '₺' },
   TWD: { name: 'New Taiwan Dollar', symbol: 'NT$' }
 };
 
@@ -40,6 +41,7 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     CAD: 0.1923,
     AUD: 0.2077,
     JPY: 16.9231,
+    TRY: 4.2000,
     TWD: 4.4444
   },
   USD: {
@@ -50,6 +52,7 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     CAD: 1.2500,
     AUD: 1.3500,
     JPY: 110.0000,
+    TRY: 27.0000,
     TWD: 28.0000
   },
   EUR: {
@@ -60,6 +63,7 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     CAD: 1.4706,
     AUD: 1.5882,
     JPY: 129.4118,
+    TRY: 31.7647,
     TWD: 33.0000
   },
   GBP: {
@@ -70,6 +74,7 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     CAD: 1.6667,
     AUD: 1.8000,
     JPY: 146.6667,
+    TRY: 36.0000,
     TWD: 37.0000
   },
   CAD: {
@@ -80,6 +85,7 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     GBP: 0.6000,
     AUD: 1.0800,
     JPY: 88.0000,
+    TRY: 21.6000,
     TWD: 22.0000
   },
   AUD: {
@@ -90,6 +96,7 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     GBP: 0.5556,
     CAD: 0.9259,
     JPY: 81.4815,
+    TRY: 20.0000,
     TWD: 20.0000
   },
   JPY: {
@@ -100,7 +107,19 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     GBP: 0.0068,
     CAD: 0.0114,
     AUD: 0.0123,
-    TWD: 0.2500
+    TRY: 0.2455,
+    TWD: 0.2000
+  },
+  TRY: {
+    TRY: 1,
+    USD: 0.0370,
+    CNY: 0.2381,
+    EUR: 0.0315,
+    GBP: 0.0278,
+    CAD: 0.0463,
+    AUD: 0.0500,
+    JPY: 4.0741,
+    TWD: 1.3600
   },
   TWD: {
     TWD: 1,
@@ -110,7 +129,8 @@ const BASE_RATES: Record<CurrencyType, Record<CurrencyType, number>> = {
     GBP: 0.0270,
     CAD: 0.0455,
     AUD: 0.0500,
-    JPY: 4.0000
+    JPY: 4.0000,
+    TRY: 0.7300
   }
 };
 

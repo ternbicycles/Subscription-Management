@@ -50,12 +50,14 @@
 
 ### 高级功能
 - ✅ **自动续费处理** - 智能检测到期订阅并自动更新
-- ✅ **多币种支持** - 7种主要货币实时转换 (USD, EUR, GBP, CAD, AUD, JPY, CNY)
+- ✅ **多币种支持** - 8种主要货币实时转换 (USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY)
 - ✅ **汇率自动更新** - 集成天行数据API，每日更新汇率
 - ✅ **费用报告仪表板** - 全面的费用分析和可视化
 - ✅ **支付历史追踪** - 完整的支付记录和历史分析
 - ✅ **数据导入导出** - CSV、Json格式数据导入导出
 - ✅ **主题切换** - 支持浅色/深色/系统主题
+- ✅ **国际化支持 (i18n)** - 多语言支持，包含中英文界面
+- ✅ **智能通知系统** - 集成Telegram的智能通知提醒系统
 
 ## 🛠 技术栈
 
@@ -67,6 +69,7 @@
 - **路由**: React Router
 - **图表**: Recharts
 - **UI组件**: Radix UI
+- **国际化**: React i18next + i18next-browser-languagedetector
 
 ### 后端
 - **运行时**: Node.js
@@ -74,6 +77,7 @@
 - **数据库**: SQLite + better-sqlite3
 - **定时任务**: node-cron
 - **API认证**: API Key
+- **通知服务**: Telegram Bot API + 邮件通知（规划中）
 
 ### 部署
 - **容器化**: Docker + Docker Compose
@@ -140,6 +144,34 @@ npm run dev
 前端界面: http://localhost:5173
 后端服务: http://localhost:3001/api
 
+## ⚠️ 提醒
+
+**对于在2025年7月27日之前安装系统的用户：**
+
+最近的更新包含了直接在 `schema.sql` 上进行的数据库结构更改，没有使用适当的迁移脚本。如果您在拉取最新代码后遇到错误，请按照以下步骤操作：
+
+### 更新前的准备工作
+1. **导出订阅数据** - 使用应用程序中的数据导出功能备份所有订阅信息
+2. **备份数据库文件** - 从数据目录中复制一份 `database.sqlite` 文件
+
+### 如果遇到数据库错误
+如果更新后遇到数据库相关错误：
+
+1. **停止应用程序**
+2. **备份当前数据库** (如果尚未备份)
+3. **重置数据库**：
+   ```bash
+   cd server
+   npm run db:reset
+   ```
+4. **重新导入数据** - 使用应用程序中的导入功能重新导入您的数据
+
+### 数据文件位置
+- **Docker 部署**：数据库位于 `DATABASE_PATH` 环境变量指定的路径（默认：`/app/data/database.sqlite`）
+- **本地开发**：数据库位于 `server` 目录下的 `database.sqlite` 文件
+
+未来的更新将包含适当的数据库迁移脚本以避免此类问题。
+
 ## 🔧 配置说明
 
 ### 环境变量
@@ -147,20 +179,34 @@ npm run dev
 创建 `.env` 文件并配置以下变量：
 
 ```bash
-# API安全密钥 (必需)
+# API安全密钥 (所有受保护接口必需)
 API_KEY=your_secret_api_key_here
 
 # 服务端口 (可选，默认3001)
 PORT=3001
 
 # 基础货币 (可选，默认CNY)
+# 支持的货币: USD, EUR, GBP, CNY, JPY, CAD, AUD, TRY
 BASE_CURRENCY=CNY
-
-# 天行数据API密钥 (可选，用于汇率更新)
-TIANAPI_KEY=your_tianapi_key_here
 
 # 数据库路径 (Docker部署时使用)
 DATABASE_PATH=/app/data/database.sqlite
+
+# 天行数据API密钥 (可选，用于实时汇率更新)
+# 获取密钥: https://www.tianapi.com/
+TIANAPI_KEY=your_tianapi_key_here
+
+# Telegram机器人令牌 (Telegram通知必需)
+# 从Telegram的@BotFather获取
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# 通知设置
+NOTIFICATION_DEFAULT_CHANNELS=["telegram"]
+NOTIFICATION_DEFAULT_LANGUAGE=zh-CN
+SCHEDULER_TIMEZONE=Asia/Shanghai
+SCHEDULER_CHECK_TIME=09:00
+NOTIFICATION_DEFAULT_ADVANCE_DAYS=7
+NOTIFICATION_DEFAULT_REPEAT_NOTIFICATION=false
 ```
 
 ### 数据库管理

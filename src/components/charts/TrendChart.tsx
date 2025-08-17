@@ -15,6 +15,18 @@ import { TrendingUp, TrendingDown } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { formatCurrencyAmount } from "@/utils/currency"
+
+interface TooltipPayload {
+  name: string
+  value: number
+  color: string
+}
+
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: TooltipPayload[]
+  label?: string
+}
 import { CHART_COLORS } from "@/config/constants"
 import { TrendDataPoint } from "@/types"
 
@@ -31,7 +43,6 @@ export function TrendChart({
   title,
   description,
   data,
-  period,
   currency = 'USD',
   showCategories = false
 }: TrendChartProps) {
@@ -69,13 +80,13 @@ export function TrendChart({
     return Array.from(allCategories)
   }, [data, showCategories])
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (!active || !payload || !payload.length) return null
 
     return (
       <div className="bg-background border rounded-lg shadow-lg p-3">
         <p className="font-medium">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry: TooltipPayload, index: number) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {formatCurrencyAmount(entry.value, currency)}
           </p>

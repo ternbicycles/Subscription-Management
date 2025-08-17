@@ -18,7 +18,7 @@ export const getHeaders = (method: string = 'GET'): HeadersInit => {
       if (apiKey) {
         headers['X-API-KEY'] = apiKey;
       }
-    } catch (e) {
+    } catch {
       // Ignore parse errors
     }
   }
@@ -40,7 +40,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public data?: any
+    public data?: unknown
   ) {
     super(message);
     this.name = 'ApiError';

@@ -1,4 +1,4 @@
-import { format, parse, isValid, startOfMonth, endOfMonth, startOfYear, endOfYear, getDaysInMonth, getDaysInYear, differenceInDays } from 'date-fns';
+import { format, isValid, startOfMonth, endOfMonth, startOfYear, endOfYear, getDaysInMonth, getDaysInYear, differenceInDays } from 'date-fns';
 
 // Date formatting functions
 export const formatDate = (date: Date | string | null | undefined): string => {
@@ -104,7 +104,7 @@ export const getDaysUntilDate = (targetDate: Date | string): number => {
 };
 
 // Date validation
-export const isValidDate = (date: any): boolean => {
+export const isValidDate = (date: unknown): boolean => {
   if (!date) return false;
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   return isValid(dateObj);

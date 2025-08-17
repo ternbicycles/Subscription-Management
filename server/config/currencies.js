@@ -4,7 +4,7 @@
  */
 
 // 所有支持的货币代码（固定不变）
-const ALL_CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'TWD'];
+const ALL_CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CNY', 'TRY', 'TWD'];
 
 // 基础货币配置 - 从环境变量读取，默认为 CNY
 let BASE_CURRENCY = process.env.BASE_CURRENCY || 'CNY';
@@ -33,6 +33,7 @@ const ALL_CURRENCIES = [
     { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
     { code: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
     { code: 'JPY', name: 'Japanese Yen', symbol: '¥' },
+    { code: 'TRY', name: 'Turkish Lira', symbol: '₺' },
     { code: 'TWD', name: 'New Taiwan Dollar', symbol: 'NT$' }
 ];
 
@@ -54,6 +55,7 @@ const BASE_RATES = {
         CAD: 0.1923,
         AUD: 0.2077,
         JPY: 16.9231,
+        TRY: 4.2000,
         TWD: 4.4444
     },
     USD: {
@@ -64,6 +66,7 @@ const BASE_RATES = {
         CAD: 1.2500,
         AUD: 1.3500,
         JPY: 110.0000,
+        TRY: 27.0000,
         TWD: 28.0000
     },
     EUR: {
@@ -74,6 +77,7 @@ const BASE_RATES = {
         CAD: 1.4706,
         AUD: 1.5882,
         JPY: 129.4118,
+        TRY: 31.7647,
         TWD: 33.0000
     },
     GBP: {
@@ -84,6 +88,7 @@ const BASE_RATES = {
         CAD: 1.6667,
         AUD: 1.8000,
         JPY: 146.6667,
+        TRY: 36.0000,
         TWD: 37.0000
     },
     CAD: {
@@ -94,6 +99,7 @@ const BASE_RATES = {
         GBP: 0.6000,
         AUD: 1.0800,
         JPY: 88.0000,
+        TRY: 21.6000,
         TWD: 22.0000
     },
     AUD: {
@@ -104,6 +110,7 @@ const BASE_RATES = {
         GBP: 0.5556,
         CAD: 0.9259,
         JPY: 81.4815,
+        TRY: 20.0000,
         TWD: 20.0000
     },
     JPY: {
@@ -114,7 +121,19 @@ const BASE_RATES = {
         GBP: 0.0068,
         CAD: 0.0114,
         AUD: 0.0123,
+        TRY: 0.2455,
         TWD: 0.2500
+    },
+    TRY: {
+        TRY: 1.0000,
+        USD: 0.0370,
+        CNY: 0.2381,
+        EUR: 0.0315,
+        GBP: 0.0278,
+        CAD: 0.0463,
+        AUD: 0.0500,
+        JPY: 4.0741,
+        TWD: 1.36
     },
     TWD: {
         TWD: 1,
@@ -124,7 +143,8 @@ const BASE_RATES = {
         GBP: 0.0270,
         CAD: 0.0455,
         AUD: 0.0500,
-        JPY: 4.0000
+        JPY: 4.0000,
+        TRY: 0.73
     }
 };
 

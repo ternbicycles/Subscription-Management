@@ -1,6 +1,7 @@
 const BaseRepository = require('../utils/BaseRepository');
 const { calculateNextBillingDate, getTodayString, isDateDueOrOverdue } = require('../utils/dateUtils');
 const logger = require('../utils/logger');
+const NotificationService = require('./notificationService');
 
 /**
  * 订阅管理服务类
@@ -9,6 +10,7 @@ const logger = require('../utils/logger');
 class SubscriptionManagementService extends BaseRepository {
     constructor(db) {
         super(db, 'subscriptions');
+        this.notificationService = new NotificationService(this.db);
     }
 
     /**
@@ -36,6 +38,18 @@ class SubscriptionManagementService extends BaseRepository {
                             renewedSubscriptions.push(renewalResult.data);
                         } else {
                             errors++;
+                            // 发送续订失败通知（异步触发，不阻塞批处理）
+                            this.notificationService
+                                .sendNotification({
+                                    subscriptionId: subscription.id,
+                                    notificationType: 'renewal_failure'
+                                })
+                                .then(() => {
+                                    logger.info(`Renewal failure notification dispatched for subscription ${subscription.id}`);
+                                })
+                                .catch((notificationError) => {
+                                    logger.error(`Failed to send renewal failure notification for subscription ${subscription.id}:`, notificationError.message);
+                                });
                         }
                     }
                 } catch (error) {
@@ -148,6 +162,18 @@ class SubscriptionManagementService extends BaseRepository {
                     renewalData: renewalResult.data
                 };
             } else {
+                // 发送手动续订失败通知（异步触发，不阻塞请求）
+                this.notificationService
+                    .sendNotification({
+                        subscriptionId: subscription.id,
+                        notificationType: 'renewal_failure'
+                    })
+                    .then(() => {
+                        logger.info(`Manual renewal failure notification dispatched for subscription ${subscriptionId}`);
+                    })
+                    .catch((notificationError) => {
+                        logger.error(`Failed to send manual renewal failure notification for subscription ${subscriptionId}:`, notificationError.message);
+                    });
                 throw new Error('Failed to update subscription');
             }
         } catch (error) {
@@ -310,16 +336,35 @@ class SubscriptionManagementService extends BaseRepository {
             });
 
             if (renewalResult) {
+                const renewalData = {
+                    id: subscription.id,
+                    name: subscription.name,
+                    oldNextBilling: subscription.next_billing_date,
+                    newLastBilling: todayStr,
+                    newNextBilling: newNextBillingStr,
+                    renewedEarly: renewalType === 'manual' && new Date(subscription.next_billing_date) >= new Date()
+                };
+
+                // 发送续订成功通知（异步触发，不阻塞请求）
+                this.notificationService
+                    .sendNotification({
+                        subscriptionId: subscription.id,
+                        notificationType: 'renewal_success'
+                    })
+                    .then(() => {
+                        logger.info(`Renewal success notification dispatched for subscription ${subscription.id}`);
+                    })
+                    .catch((notificationError) => {
+                        logger.error(
+                            `Failed to send renewal success notification for subscription ${subscription.id}:`,
+                            notificationError.message
+                        );
+                        // 不影响续订结果，只记录错误
+                    });
+
                 return {
                     success: true,
-                    data: {
-                        id: subscription.id,
-                        name: subscription.name,
-                        oldNextBilling: subscription.next_billing_date,
-                        newLastBilling: todayStr,
-                        newNextBilling: newNextBillingStr,
-                        renewedEarly: renewalType === 'manual' && new Date(subscription.next_billing_date) >= new Date()
-                    }
+                    data: renewalData
                 };
             } else {
                 return { success: false };

@@ -1,9 +1,7 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSubscriptionStore } from "@/store/subscriptionStore"
 import { useSettingsStore } from "@/store/settingsStore"
-import {
-  getDateRangePresets
-} from "@/lib/expense-analytics"
 import {
   getApiMonthlyExpenses,
   getApiCategoryExpenses,
@@ -25,6 +23,8 @@ import { ExpenseTrendChart } from "@/components/charts/ExpenseTrendChart"
 import { YearlyTrendChart } from "@/components/charts/YearlyTrendChart"
 import { CategoryPieChart } from "@/components/charts/CategoryPieChart"
 import { ExpenseInfoCards } from "@/components/charts/ExpenseInfoCards"
+import { apiClient } from '@/utils/api-client'
+import type { PaymentRecordApi } from '@/utils/dataTransform'
 
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -32,32 +32,58 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 
 export function ExpenseReportsPage() {
-  const { subscriptions, categories, fetchSubscriptions, fetchCategories } = useSubscriptionStore()
+  const { fetchSubscriptions, fetchCategories } = useSubscriptionStore()
+  const { t } = useTranslation(['reports', 'common'])
   const { currency: userCurrency, fetchSettings } = useSettingsStore()
   
   // Filter states
-  const [selectedDateRange, setSelectedDateRange] = useState('Last 12 Months')
-  const [selectedYearlyDateRange, setSelectedYearlyDateRange] = useState(() => {
+  const [selectedDateRange] = useState('Last 12 Months')
+  const [selectedYearlyDateRange] = useState(() => {
     const currentYear = new Date().getFullYear()
     return `${currentYear - 2} - ${currentYear}`
   })
 
   // Fetch data when component mounts
+  const initializeData = useCallback(async () => {
+    await fetchSubscriptions()
+    await fetchCategories()
+    await fetchSettings()
+  }, [fetchSubscriptions, fetchCategories, fetchSettings])
+
   useEffect(() => {
-    const initializeData = async () => {
-      await fetchSubscriptions()
-      await fetchCategories()
-      await fetchSettings()
+    initializeData()
+  }, [initializeData])
+
+  // Get date range presets - create stable date range
+  const currentDateRange = useMemo(() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth()
+
+    const presets = {
+      'Last 3 Months': {
+        startDate: new Date(currentYear, currentMonth - 2, 1),
+        endDate: now
+      },
+      'Last 6 Months': {
+        startDate: new Date(currentYear, currentMonth - 5, 1),
+        endDate: now
+      },
+      'Last 12 Months': {
+        startDate: new Date(currentYear, currentMonth - 11, 1),
+        endDate: now
+      },
+      'This Year': {
+        startDate: new Date(currentYear, 0, 1),
+        endDate: now
+      },
+      'Last Year': {
+        startDate: new Date(currentYear - 1, 0, 1),
+        endDate: new Date(currentYear - 1, 11, 31)
+      }
     }
 
-    initializeData()
-  }, []) // Remove dependencies to prevent infinite re-renders
-
-  // Get date range presets
-  const dateRangePresets = getDateRangePresets()
-  const currentDateRange = useMemo(() => {
-    return dateRangePresets.find(preset => preset.label === selectedDateRange)
-      || dateRangePresets[2] // Default to Last 12 Months
+    return presets[selectedDateRange as keyof typeof presets] || presets['Last 12 Months']
   }, [selectedDateRange])
 
   // Get yearly date range presets (fixed recent 3 years)
@@ -102,15 +128,17 @@ export function ExpenseReportsPage() {
   const [isLoadingYearlyExpenses, setIsLoadingYearlyExpenses] = useState(false)
   const [isLoadingCategoryExpenses, setIsLoadingCategoryExpenses] = useState(false)
   const [isLoadingYearlyCategoryExpenses, setIsLoadingYearlyCategoryExpenses] = useState(false)
-  const [isLoadingMonthlyCategoryExpenses, setIsLoadingMonthlyCategoryExpenses] = useState(false)
-  const [isLoadingYearlyGroupedCategoryExpenses, setIsLoadingYearlyGroupedCategoryExpenses] = useState(false)
+  const [, setIsLoadingMonthlyCategoryExpenses] = useState(false)
+  const [, setIsLoadingYearlyGroupedCategoryExpenses] = useState(false)
+
   const [isLoadingExpenseInfo, setIsLoadingExpenseInfo] = useState(false)
   const [expenseError, setExpenseError] = useState<string | null>(null)
   const [yearlyExpenseError, setYearlyExpenseError] = useState<string | null>(null)
   const [categoryExpenseError, setCategoryExpenseError] = useState<string | null>(null)
   const [yearlyCategoryExpenseError, setYearlyCategoryExpenseError] = useState<string | null>(null)
-  const [monthlyCategoryExpenseError, setMonthlyCategoryExpenseError] = useState<string | null>(null)
-  const [yearlyGroupedCategoryExpenseError, setYearlyGroupedCategoryExpenseError] = useState<string | null>(null)
+  const [, setMonthlyCategoryExpenseError] = useState<string | null>(null)
+  const [, setYearlyGroupedCategoryExpenseError] = useState<string | null>(null)
+
   const [expenseInfoError, setExpenseInfoError] = useState<string | null>(null)
 
 
@@ -138,10 +166,33 @@ export function ExpenseReportsPage() {
           const quarterlyInfo = calculateQuarterlyExpenses(recentQuarterly, userCurrency)
           const yearlyInfo = calculateYearlyExpenses(recentYearly, userCurrency)
 
+          // Ensure paymentCount matches real payment-history records
+          const fillAccurateCounts = async (list: ExpenseInfoData[]): Promise<ExpenseInfoData[]> => {
+            const updated = await Promise.all(
+              list.map(async (item) => {
+                try {
+                  const records = await apiClient.get<PaymentRecordApi[]>(
+                    `/payment-history?start_date=${item.startDate}&end_date=${item.endDate}&status=succeeded`
+                  )
+                  return { ...item, paymentCount: records.length }
+                } catch {
+                  return item
+                }
+              })
+            )
+            return updated
+          }
+
+          const [monthlyFixed, quarterlyFixed, yearlyFixed] = await Promise.all([
+            fillAccurateCounts(monthlyInfo),
+            fillAccurateCounts(quarterlyInfo),
+            fillAccurateCounts(yearlyInfo)
+          ])
+
           setExpenseInfoData({
-            monthly: monthlyInfo,
-            quarterly: quarterlyInfo,
-            yearly: yearlyInfo
+            monthly: monthlyFixed,
+            quarterly: quarterlyFixed,
+            yearly: yearlyFixed
           })
         } else {
           // No data available, set empty state
@@ -316,9 +367,9 @@ export function ExpenseReportsPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Expense Reports</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('title')}</h1>
           <p className="text-muted-foreground">
-            Comprehensive analysis of your subscription expenses
+            {t('description')}
           </p>
         </div>
       </div>
@@ -328,7 +379,7 @@ export function ExpenseReportsPage() {
         <div>
           {isLoadingExpenseInfo ? (
             <div>
-              <p className="text-sm text-muted-foreground mb-4">Loading expense overview...</p>
+              <p className="text-sm text-muted-foreground mb-4">{t('loadingExpenseOverview')}</p>
               <ExpenseInfoCards
                 monthlyData={[]}
                 quarterlyData={[]}
@@ -341,7 +392,7 @@ export function ExpenseReportsPage() {
             <Card>
               <CardContent className="flex items-center justify-center h-32">
                 <div className="text-center">
-                  <p className="text-sm text-destructive mb-2">Failed to load expense overview</p>
+                  <p className="text-sm text-destructive mb-2">{t('failedToLoadExpenseOverview')}</p>
                   <p className="text-xs text-muted-foreground">{expenseInfoError}</p>
                 </div>
               </CardContent>
@@ -367,7 +418,7 @@ export function ExpenseReportsPage() {
           <CardContent className="flex items-center justify-center h-32">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Loading expense data...</p>
+              <p className="text-sm text-muted-foreground">{t('loadingExpenseData')}</p>
             </div>
           </CardContent>
         </Card>
@@ -377,7 +428,7 @@ export function ExpenseReportsPage() {
         <Card>
           <CardContent className="flex items-center justify-center h-32">
             <div className="text-center">
-              <p className="text-sm text-destructive mb-2">Failed to load expense data</p>
+              <p className="text-sm text-destructive mb-2">{t('failedToLoadExpenseData')}</p>
               <p className="text-xs text-muted-foreground">{expenseError}</p>
             </div>
           </CardContent>
@@ -389,8 +440,8 @@ export function ExpenseReportsPage() {
         <div className="space-y-4">
           <Tabs defaultValue="monthly" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="yearly">Yearly</TabsTrigger>
+              <TabsTrigger value="monthly">{t('monthly')}</TabsTrigger>
+              <TabsTrigger value="yearly">{t('yearly')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="monthly" className="space-y-4">
@@ -405,7 +456,7 @@ export function ExpenseReportsPage() {
                     <CardContent className="flex items-center justify-center h-[400px]">
                       <div className="text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                        <p className="text-sm text-muted-foreground">Loading category data...</p>
+                        <p className="text-sm text-muted-foreground">{t('loadingCategoryData')}</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -413,7 +464,7 @@ export function ExpenseReportsPage() {
                   <Card>
                     <CardContent className="flex items-center justify-center h-[400px]">
                       <div className="text-center text-destructive">
-                        <p className="font-medium">Failed to load category data</p>
+                        <p className="font-medium">{t('failedToLoadCategoryData')}</p>
                         <p className="text-sm text-muted-foreground mt-1">{categoryExpenseError}</p>
                       </div>
                     </CardContent>
@@ -432,13 +483,13 @@ export function ExpenseReportsPage() {
                 <div className="flex items-center justify-center h-32">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                    <p className="text-sm text-muted-foreground">Loading yearly data...</p>
+                    <p className="text-sm text-muted-foreground">{t('loadingYearlyData')}</p>
                   </div>
                 </div>
               ) : yearlyExpenseError ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="text-center">
-                    <p className="text-sm text-destructive mb-2">Failed to load yearly data</p>
+                    <p className="text-sm text-destructive mb-2">{t('failedToLoadYearlyData')}</p>
                     <p className="text-xs text-muted-foreground">{yearlyExpenseError}</p>
                   </div>
                 </div>
@@ -454,7 +505,7 @@ export function ExpenseReportsPage() {
                       <CardContent className="flex items-center justify-center h-[400px]">
                         <div className="text-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                          <p className="text-sm text-muted-foreground">Loading yearly category data...</p>
+                          <p className="text-sm text-muted-foreground">{t('loadingYearlyCategoryData')}</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -462,7 +513,7 @@ export function ExpenseReportsPage() {
                     <Card>
                       <CardContent className="flex items-center justify-center h-[400px]">
                         <div className="text-center text-destructive">
-                          <p className="font-medium">Failed to load yearly category data</p>
+                          <p className="font-medium">{t('failedToLoadYearlyCategoryData')}</p>
                           <p className="text-sm text-muted-foreground mt-1">{yearlyCategoryExpenseError}</p>
                         </div>
                       </CardContent>

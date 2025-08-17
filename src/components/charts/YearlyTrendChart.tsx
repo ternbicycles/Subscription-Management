@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartConfig } from "@/components/ui/chart"
 import { formatCurrencyAmount } from "@/utils/currency"
 import { YearlyExpense } from "@/lib/expense-analytics-api"
-import { TrendingUp, TrendingDown, LineChart as LineChartIcon, BarChart3 } from "lucide-react"
+import { LineChart as LineChartIcon, BarChart3 } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 interface YearlyTrendChartProps {
   data: YearlyExpense[]
@@ -56,6 +57,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function YearlyTrendChart({ data, categoryData, currency, className }: YearlyTrendChartProps) {
+  const { t } = useTranslation('reports')
   const [chartType, setChartType] = useState<'line' | 'groupedBar'>('line')
   
   // 获取所有类别名称（用于分组柱状图）
@@ -69,14 +71,6 @@ export function YearlyTrendChart({ data, categoryData, currency, className }: Ye
     const colorKeys = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5']
     return `hsl(var(--${colorKeys[index % colorKeys.length]}))`
   }
-
-  // Calculate trend (kept for potential future use)
-  const trend = data.length >= 2 
-    ? ((data[data.length - 1].amount - data[0].amount) / data[0].amount) * 100
-    : 0
-  
-  const isPositiveTrend = trend > 0
-  const TrendIcon = isPositiveTrend ? TrendingUp : TrendingDown
 
   const renderChart = () => {
     if (chartType === 'line') {
@@ -114,13 +108,13 @@ export function YearlyTrendChart({ data, categoryData, currency, className }: Ye
                       <div className="font-medium">{label}</div>
                       <div className="grid gap-1 text-sm">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">Amount:</span>
+                          <span className="text-muted-foreground">{t('chart.amount')}:</span>
                           <span className="font-medium">
                             {formatCurrencyAmount(data.amount, currency)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground">Subscriptions:</span>
+                          <span className="text-muted-foreground">{t('chart.subscriptions')}:</span>
                           <span className="font-medium">{data.subscriptionCount}</span>
                         </div>
                       </div>
@@ -191,7 +185,7 @@ export function YearlyTrendChart({ data, categoryData, currency, className }: Ye
                         ))}
                         <div className="border-t pt-1 mt-1">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="text-muted-foreground font-medium">Total:</span>
+                            <span className="text-muted-foreground font-medium">{t('chart.total')}:</span>
                             <span className="font-semibold">
                               {formatCurrencyAmount(
                                 payload.reduce((sum, entry) => sum + (entry.value as number), 0), 
@@ -226,11 +220,11 @@ export function YearlyTrendChart({ data, categoryData, currency, className }: Ye
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-lg">Yearly Trends</CardTitle>
+          <CardTitle className="text-lg">{t('chart.yearlyTrends')}</CardTitle>
           <CardDescription>
             {chartType === 'line' 
-              ? 'Annual spending over time'
-              : 'Annual spending by category'
+              ? t('chart.annualSpendingOverTime')
+              : t('chart.annualSpendingByCategory')
             }
           </CardDescription>
         </div>
@@ -261,8 +255,8 @@ export function YearlyTrendChart({ data, categoryData, currency, className }: Ye
         {(chartType === 'line' ? data.length === 0 : !categoryData || categoryData.length === 0) ? (
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
             {chartType === 'line' 
-              ? 'No yearly data available'
-              : 'No yearly category data available'
+              ? t('chart.noYearlyDataAvailable')
+              : t('chart.noYearlyCategoryDataAvailable')
             }
           </div>
         ) : (

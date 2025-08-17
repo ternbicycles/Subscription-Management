@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="A personal subscription management tool to track and manage all your recurring payments in one place" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://static.devv.ai; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:3001 https://localhost:3001; font-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' http://localhost:3001 https://localhost:3001; font-src 'self';">
     <title>Subscription Manager</title>
     <!-- Add inline styles for the preloader -->
     <style>
@@ -102,15 +102,6 @@
           }
         }, 5000);
       });
-
-      // Error handler for the external script
-      window.addEventListener('error', function(e) {
-        // Only handle errors for the specific script
-        if (e.target && e.target.src && e.target.src.includes('devv-app.js')) {
-          console.warn('devv-app.js failed to load, but application will continue to function');
-          e.preventDefault(); // Prevent the error from propagating
-        }
-      }, true); // Use capture phase to catch the error before it reaches window.onerror
       
       // Global error handler
       window.onerror = function(message, source, lineno, colno, error) {
@@ -127,8 +118,6 @@
       };
     </script>
 
-    <!-- IMPORTANT: Never remove the following script reference, otherwise advanced features like element editing will not work -->
-    <script src="https://static.devv.ai/devv-app.js" type="module" onerror="console.warn('Failed to load devv-app.js')"></script>
     <script type="module" src="/src/main.tsx"></script>
     
     <script>

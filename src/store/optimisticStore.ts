@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { apiClient } from '@/utils/api-client'
 import { Subscription } from './subscriptionStore'
+import { transformToApi } from './subscriptionStore'
 
 interface OptimisticUpdate {
   id: string
@@ -48,8 +49,9 @@ export const optimisticUpdateSubscription = async (
   })
   
   try {
-    // Make API call
-    await apiClient.put(`/protected/subscriptions/${id}`, data)
+    // Make API call (convert to API schema)
+    const apiData = transformToApi(data)
+    await apiClient.put(`/protected/subscriptions/${id}`, apiData)
     
     // Remove optimistic update and trigger success
     useOptimisticStore.getState().removeOptimisticUpdate(updateId)

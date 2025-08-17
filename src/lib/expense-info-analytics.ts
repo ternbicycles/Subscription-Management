@@ -40,7 +40,7 @@ function formatPeriodName(type: 'monthly' | 'quarterly' | 'yearly', year: number
         month: 'long',
         year: 'numeric'
       })
-    case 'quarterly':
+    case 'quarterly': {
       const quarterMonths = [
         'Jan - Mar',  // Q1
         'Apr - Jun',  // Q2
@@ -48,6 +48,7 @@ function formatPeriodName(type: 'monthly' | 'quarterly' | 'yearly', year: number
         'Oct - Dec'   // Q4
       ]
       return `Q${period} ${year} (${quarterMonths[period - 1]})`
+    }
     case 'yearly':
       return year.toString()
     default:
@@ -68,7 +69,7 @@ function getPeriodDateRange(type: 'monthly' | 'quarterly' | 'yearly', year: numb
   }
 
   switch (type) {
-    case 'monthly':
+    case 'monthly': {
       // 月初：当前月的第1天
       const monthStart = new Date(year, period - 1, 1)
       // 月末：下个月的第0天（即当前月的最后一天）
@@ -77,7 +78,8 @@ function getPeriodDateRange(type: 'monthly' | 'quarterly' | 'yearly', year: numb
         startDate: formatDate(monthStart),
         endDate: formatDate(monthEnd)
       }
-    case 'quarterly':
+    }
+    case 'quarterly': {
       const quarterStartMonth = (period - 1) * 3
       const quarterStart = new Date(year, quarterStartMonth, 1)
       const quarterEnd = new Date(year, quarterStartMonth + 3, 0)
@@ -85,6 +87,7 @@ function getPeriodDateRange(type: 'monthly' | 'quarterly' | 'yearly', year: numb
         startDate: formatDate(quarterStart),
         endDate: formatDate(quarterEnd)
       }
+    }
     case 'yearly':
       return {
         startDate: formatDate(new Date(year, 0, 1)),
@@ -158,7 +161,7 @@ export function calculateQuarterlyExpenses(
     quarterData.subscriptions.add(expense.subscriptionCount)
   })
 
-  return Array.from(quarterlyMap.entries()).map(([quarterKey, data]) => {
+  return Array.from(quarterlyMap.entries()).map(([, data]) => {
     const daysInQuarter = getDaysInQuarter(data.year, data.quarter)
     const { startDate, endDate } = getPeriodDateRange('quarterly', data.year, data.quarter)
 
@@ -243,7 +246,8 @@ export function getRecentPeriods() {
   return {
     // Last 6 months (including current month)
     monthlyPeriods: Array.from({ length: 6 }, (_, i) => {
-      const date = new Date(currentYear, currentMonth - i, 1)
+      // Date's month parameter is 0-based; currentMonth is 1-based
+      const date = new Date(currentYear, (currentMonth - 1) - i, 1)
       return {
         year: date.getFullYear(),
         month: date.getMonth() + 1,

@@ -1,6 +1,9 @@
 const Database = require('better-sqlite3');
 const config = require('./index');
 
+// 用于控制数据库路径日志输出的标志
+let dbPathLogged = false;
+
 /**
  * 创建数据库连接
  * 专注于数据库连接的创建，不处理初始化逻辑
@@ -8,7 +11,12 @@ const config = require('./index');
  */
 function createDatabaseConnection() {
     const dbPath = config.getDatabasePath();
-    console.log(`📂 数据库路径: ${dbPath}`);
+    
+    // 只在第一次创建连接时输出数据库路径
+    if (!dbPathLogged) {
+        console.log(`📂 Database path: ${dbPath}`);
+        dbPathLogged = true;
+    }
 
     // 确保数据库目录存在
     config.ensureDatabaseDir();

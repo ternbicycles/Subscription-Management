@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router-dom"
 import { Download, Upload, Eye, EyeOff } from "lucide-react"
+
+import { Subscription } from "@/store/subscriptionStore"
 
 import {
   Card,
@@ -40,9 +43,11 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { ExchangeRateManager } from "@/components/ExchangeRateManager"
 import { OptionsManager } from "@/components/subscription/OptionsManager"
+import { NotificationSettings } from "@/components/notification/NotificationSettings"
 import { useTheme } from "next-themes"
 
 export function SettingsPage() {
+  const { t } = useTranslation(['settings', 'common'])
   const { toast } = useToast()
   const [searchParams] = useSearchParams()
 
@@ -76,9 +81,13 @@ export function SettingsPage() {
   // Subscription store methods
   const { subscriptions, resetSubscriptions, addSubscription } = useSubscriptionStore()
 
-  useEffect(() => {
+  const initializeSettings = useCallback(() => {
     fetchSettings()
-  }, []) // Remove dependencies to prevent infinite re-renders
+  }, [fetchSettings])
+
+  useEffect(() => {
+    initializeSettings()
+  }, [initializeSettings])
   
   // When the API key from the store changes, update the local state
   useEffect(() => {
@@ -92,8 +101,8 @@ export function SettingsPage() {
   const handleSaveApiKey = async () => {
     await setApiKey(tempApiKey)
     toast({
-      title: "API Key Saved",
-      description: "Your new API key has been securely saved.",
+      title: t('apiKeySaved'),
+      description: t('apiKeySavedDesc'),
     })
   }
 
@@ -104,9 +113,12 @@ export function SettingsPage() {
   }
 
   // Handle imports
-  const handleImportData = (subscriptionData: any[]) => {
+  const handleImportData = (subscriptionData: unknown[]) => {
     subscriptionData.forEach((sub) => {
-      addSubscription(sub)
+      // Type guard to ensure sub has the required properties
+      if (sub && typeof sub === 'object' && 'name' in sub) {
+        addSubscription(sub as Omit<Subscription, "id" | "lastBillingDate">)
+      }
     })
   }
 
@@ -118,9 +130,9 @@ export function SettingsPage() {
   }
   
   const resetConfirmation = useConfirmation({
-    title: "Reset All Data",
-    description: "Are you sure you want to reset all data? This will permanently delete all subscriptions, payment history, and settings. This action cannot be undone.",
-    confirmText: "Reset All Data",
+    title: t('resetAllData'),
+    description: t('resetAllDataConfirm'),
+    confirmText: t('resetAllData'),
     onConfirm: handleResetData,
   })
 
@@ -129,7 +141,7 @@ export function SettingsPage() {
       <div className="flex items-center justify-center h-[calc(100vh-16rem)]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg font-medium">Loading settings...</p>
+          <p className="text-lg font-medium">{t('loadingSettings')}</p>
         </div>
       </div>
     )
@@ -138,29 +150,29 @@ export function SettingsPage() {
   return (
     <>
       <div className="flex items-center justify-between pb-4">
-        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
       </div>
 
       <Tabs defaultValue={defaultTab}>
         <div className="overflow-x-auto mb-4 sm:overflow-visible">
           <TabsList className="mb-4 min-w-max sm:min-w-0">
-            <TabsTrigger value="general" className="text-xs sm:text-sm px-2 sm:px-3">General</TabsTrigger>
-            <TabsTrigger value="currency" className="text-xs sm:text-sm px-2 sm:px-3">Currency</TabsTrigger>
-            <TabsTrigger value="options" className="text-xs sm:text-sm px-2 sm:px-3">Options</TabsTrigger>
-
-            <TabsTrigger value="data" className="text-xs sm:text-sm px-2 sm:px-3">Data</TabsTrigger>
+            <TabsTrigger value="general" className="text-xs sm:text-sm px-2 sm:px-3">{t('general')}</TabsTrigger>
+            <TabsTrigger value="currency" className="text-xs sm:text-sm px-2 sm:px-3">{t('currency')}</TabsTrigger>
+            <TabsTrigger value="options" className="text-xs sm:text-sm px-2 sm:px-3">{t('options')}</TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 sm:px-3">{t('notifications')}</TabsTrigger>
+            <TabsTrigger value="data" className="text-xs sm:text-sm px-2 sm:px-3">{t('data')}</TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>Customize your general preferences</CardDescription>
+              <CardTitle>{t('generalSettings')}</CardTitle>
+              <CardDescription>{t('customizeGeneralPreferences')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div>
-                <Label htmlFor="theme">Theme Mode</Label>
+                <Label htmlFor="theme">{t('themeMode')}</Label>
                 <Select
                   value={theme}
                   onValueChange={async (value: ThemeType) => {
@@ -170,16 +182,16 @@ export function SettingsPage() {
                   }}
                 >
                   <SelectTrigger id="theme">
-                    <SelectValue placeholder="Select a theme" />
+                    <SelectValue placeholder={t('selectTheme')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="light">{t('light')}</SelectItem>
+                    <SelectItem value="dark">{t('dark')}</SelectItem>
+                    <SelectItem value="system">{t('system')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Choose between light, dark, or system preference
+                  {t('chooseBetweenThemes')}
                 </p>
               </div>
             </CardContent>
@@ -193,23 +205,27 @@ export function SettingsPage() {
         <TabsContent value="options" className="space-y-4">
           <OptionsManager />
         </TabsContent>
+
+        <TabsContent value="notifications" className="space-y-4">
+          <NotificationSettings userId={1} />
+        </TabsContent>
    
         <TabsContent value="data" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>API & Synchronization</CardTitle>
+              <CardTitle>{t('apiSynchronization')}</CardTitle>
               <CardDescription>
-                Manage your API key for backend synchronization. This key is stored locally.
+                {t('manageApiKeyDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Label htmlFor="api-key">API Key</Label>
+                <Label htmlFor="api-key">{t('apiKey')}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="api-key"
                     type={isKeyVisible ? "text" : "password"}
-                    placeholder="Enter your API key"
+                    placeholder={t('enterApiKey')}
                     value={tempApiKey}
                     onChange={(e) => setTempApiKey(e.target.value)}
                   />
@@ -222,45 +238,44 @@ export function SettingsPage() {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  The API key is required for creating, updating, or deleting subscriptions.
+                  {t('apiKeyRequired')}
                 </p>
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleSaveApiKey}>Save API Key</Button>
+              <Button onClick={handleSaveApiKey}>{t('saveApiKey')}</Button>
             </CardFooter>
           </Card>
 
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle>Data Management</CardTitle>
+              <CardTitle>{t('dataManagement')}</CardTitle>
               <CardDescription>
-                Export your subscriptions or import from another service
+                {t('exportImportDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex gap-4">
               <Button variant="outline" onClick={handleExportData}>
                 <Download className="mr-2 h-4 w-4" />
-                Export Data
+                {t('exportData')}
               </Button>
               <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
                 <Upload className="mr-2 h-4 w-4" />
-                Import Data
+                {t('importData')}
               </Button>
             </CardContent>
           </Card>
 
           <Card className="mt-4 border-destructive">
             <CardHeader>
-              <CardTitle>Reset Data</CardTitle>
+              <CardTitle>{t('resetData')}</CardTitle>
               <CardDescription>
-                This will permanently delete all your subscriptions and settings. 
-                This action cannot be undone.
+                {t('resetDataDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button variant="destructive" onClick={resetConfirmation.openDialog}>
-                Reset All Data
+                {t('resetAllData')}
               </Button>
             </CardContent>
           </Card>

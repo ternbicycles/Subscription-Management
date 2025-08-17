@@ -50,12 +50,14 @@ A modern subscription management system that helps users easily manage and track
 
 ### Advanced Features
 - ✅ **Automatic Renewal Processing** - Smart detection of expiring subscriptions with automatic updates
-- ✅ **Multi-currency Support** - Real-time conversion for 7 major currencies (USD, EUR, GBP, CAD, AUD, JPY, CNY)
+- ✅ **Multi-currency Support** - Real-time conversion for 8 major currencies (USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY)
 - ✅ **Automatic Exchange Rate Updates** - Integrated with Tianapi for daily exchange rate updates
 - ✅ **Expense Report Dashboard** - Comprehensive expense analysis and visualization
 - ✅ **Payment History Tracking** - Complete payment records and historical analysis
 - ✅ **Data Import/Export** - CSV and JSON format data import/export
 - ✅ **Theme Switching** - Support for light/dark/system themes
+- ✅ **Internationalization (i18n)** - Multi-language support with English and Chinese
+- ✅ **Notification System** - Smart notification system with Telegram integration
 
 ## 🛠 Technology Stack
 
@@ -67,6 +69,7 @@ A modern subscription management system that helps users easily manage and track
 - **Routing**: React Router
 - **Charts**: Recharts
 - **UI Components**: Radix UI
+- **Internationalization**: React i18next + i18next-browser-languagedetector
 
 ### Backend
 - **Runtime**: Node.js
@@ -74,6 +77,7 @@ A modern subscription management system that helps users easily manage and track
 - **Database**: SQLite + better-sqlite3
 - **Scheduled Tasks**: node-cron
 - **API Authentication**: API Key
+- **Notifications**: Telegram Bot API + Email (planned)
 
 ### Deployment
 - **Containerization**: Docker + Docker Compose
@@ -140,6 +144,34 @@ npm run dev
 Frontend interface: http://localhost:5173
 Backend service: http://localhost:3001/api
 
+## ⚠️ Notice
+
+**For users who installed the system before July 27, 2025:**
+
+Recent updates include database schema changes that were applied directly to `schema.sql` without proper migrations. If you encounter errors after pulling the latest code, please follow these steps:
+
+### Before Updating
+1. **Export your subscription data** - Use the data export feature in the application to backup all your subscription information
+2. **Backup your database file** - Make a copy of your `database.sqlite` file from the data directory
+
+### If You Encounter Database Errors
+If you experience database-related errors after updating:
+
+1. **Stop the application**
+2. **Backup your current database** (if not already done)
+3. **Reset the database**:
+   ```bash
+   cd server
+   npm run db:reset
+   ```
+4. **Re-import your data** using the import feature in the application
+
+### Data Location
+- **Docker deployment**: Database is located at the path specified in `DATABASE_PATH` environment variable (default: `/app/data/database.sqlite`)
+- **Local development**: Database is located in the `server` directory as `database.sqlite`
+
+Future updates will include proper database migrations to avoid this issue.
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -147,20 +179,34 @@ Backend service: http://localhost:3001/api
 Create a `.env` file and configure the following variables:
 
 ```bash
-# API security key (required)
+# API security key (required for all protected endpoints)
 API_KEY=your_secret_api_key_here
 
 # Service port (optional, default 3001)
 PORT=3001
 
 # Base currency (optional, default CNY)
+# Supported: USD, EUR, GBP, CNY, JPY, CAD, AUD, TRY
 BASE_CURRENCY=CNY
-
-# Tianapi API key (optional, for exchange rate updates)
-TIANAPI_KEY=your_tianapi_key_here
 
 # Database path (used for Docker deployment)
 DATABASE_PATH=/app/data/database.sqlite
+
+# Tianapi API key (optional, for real-time exchange rate updates)
+# Get your key from: https://www.tianapi.com/
+TIANAPI_KEY=your_tianapi_key_here
+
+# Telegram Bot Token (required for Telegram notifications)
+# Get from @BotFather on Telegram
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+
+# notification settings
+NOTIFICATION_DEFAULT_CHANNELS=["telegram"]
+NOTIFICATION_DEFAULT_LANGUAGE=en
+SCHEDULER_TIMEZONE=UTC
+SCHEDULER_CHECK_TIME=09:00
+NOTIFICATION_DEFAULT_ADVANCE_DAYS=7
+NOTIFICATION_DEFAULT_REPEAT_NOTIFICATION=false
 ```
 
 ### Database Management

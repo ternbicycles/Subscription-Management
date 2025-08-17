@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,10 +13,12 @@ import { logger } from '@/utils/logger';
 import { CURRENCY_NAMES } from '@/config/constants';
 
 export function ExchangeRateManager() {
+  const { t } = useTranslation('settings');
   const {
     exchangeRates,
     lastExchangeRateUpdate,
     apiKey,
+    exchangeRateConfigStatus,
     fetchExchangeRates,
     updateExchangeRatesFromApi,
     currency,
@@ -52,7 +55,7 @@ export function ExchangeRateManager() {
     } else if (diffHours > 0) {
       return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     } else {
-      return 'Just now';
+      return t('justNow');
     }
   };
 
@@ -62,41 +65,42 @@ export function ExchangeRateManager() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Currency Settings</CardTitle>
+            <CardTitle>{t('currencySettings')}</CardTitle>
             <CardDescription>
-              Set your preferred currency for expense calculation
+              {t('setPreferredCurrency')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 flex-1">
             <div>
-              <Label htmlFor="currency">Default Currency</Label>
+              <Label htmlFor="currency">{t('defaultCurrency')}</Label>
               <Select
                 value={currency}
                 onValueChange={async (value: CurrencyType) => await setCurrency(value)}
               >
                 <SelectTrigger id="currency">
-                  <SelectValue placeholder="Select a currency" />
+                  <SelectValue placeholder={t('selectCurrency')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CNY">CNY - Chinese Yuan</SelectItem>
-                  <SelectItem value="USD">USD - US Dollar</SelectItem>
-                  <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                  <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                  <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                  <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                  <SelectItem value="CNY">CNY - {t('chineseYuan')}</SelectItem>
+                  <SelectItem value="USD">USD - {t('usDollar')}</SelectItem>
+                  <SelectItem value="EUR">EUR - {t('euro')}</SelectItem>
+                  <SelectItem value="GBP">GBP - {t('britishPound')}</SelectItem>
+                  <SelectItem value="CAD">CAD - {t('canadianDollar')}</SelectItem>
+                  <SelectItem value="AUD">AUD - {t('australianDollar')}</SelectItem>
+                  <SelectItem value="JPY">JPY - {t('japaneseYen')}</SelectItem>
+                  <SelectItem value="TRY">TRY - {t('turkishLira')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground mt-1">
-                Your preferred currency for displaying subscription costs
+                {t('preferredCurrencyDesc')}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base">Show in original currency</Label>
+                <Label className="text-base">{t('showInOriginalCurrency')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Always display the original subscription currency alongside converted values
+                  {t('showOriginalCurrencyDesc')}
                 </p>
               </div>
               <Switch
@@ -112,32 +116,32 @@ export function ExchangeRateManager() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Exchange Rate Status
+              {t('exchangeRateStatus')}
             </CardTitle>
             <CardDescription>
-              Automatic exchange rate updates and current status
+              {t('automaticExchangeRateUpdates')}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-1">
             <div className="space-y-4 flex-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">API Provider</p>
+                  <p className="text-sm font-medium">{t('apiProvider')}</p>
                   <p className="text-sm text-muted-foreground">tianapi.com</p>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">API Configuration</p>
+                  <p className="text-sm font-medium">{t('apiConfiguration')}</p>
                   <div className="flex items-center gap-2">
-                    {apiKey ? (
+                    {exchangeRateConfigStatus?.tianApiConfigured ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm text-green-600">Configured</span>
+                        <span className="text-sm text-green-600">{t('configured')}</span>
                       </>
                     ) : (
                       <>
                         <AlertCircle className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-red-600">Not configured</span>
+                        <span className="text-sm text-red-600">{t('notConfigured')}</span>
                       </>
                     )}
                   </div>
@@ -146,12 +150,12 @@ export function ExchangeRateManager() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Update Frequency</p>
-                  <p className="text-sm text-muted-foreground">Daily (Automatic)</p>
+                  <p className="text-sm font-medium">{t('updateFrequency')}</p>
+                  <p className="text-sm text-muted-foreground">{t('dailyAutomatic')}</p>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Last Successful Update</p>
+                  <p className="text-sm font-medium">{t('lastSuccessfulUpdate')}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatLastUpdate(lastExchangeRateUpdate)}
                   </p>
@@ -160,11 +164,11 @@ export function ExchangeRateManager() {
 
 
 
-              {!apiKey && (
+              {!exchangeRateConfigStatus?.tianApiConfigured && (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <AlertCircle className="h-4 w-4 text-yellow-600" />
                   <p className="text-sm text-yellow-800">
-                    API key not configured. Automatic updates are disabled.
+                    {t('apiKeyNotConfigured')}
                   </p>
                 </div>
               )}
@@ -173,7 +177,7 @@ export function ExchangeRateManager() {
             <div className="flex gap-2 mt-4">
               <Button
                 onClick={handleUpdateRates}
-                disabled={isUpdating || !apiKey}
+                disabled={isUpdating || !exchangeRateConfigStatus?.tianApiConfigured || !apiKey}
                 size="sm"
               >
                 {isUpdating ? (
@@ -181,7 +185,7 @@ export function ExchangeRateManager() {
                 ) : (
                   <RefreshCw className="h-4 w-4 mr-2" />
                 )}
-                Update Now
+                {t('updateNow')}
               </Button>
 
               <Button
@@ -191,7 +195,7 @@ export function ExchangeRateManager() {
                 disabled={isUpdating}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh Rates
+                {t('refreshRates')}
               </Button>
             </div>
           </CardContent>
@@ -201,9 +205,9 @@ export function ExchangeRateManager() {
       {/* 汇率列表 */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Exchange Rates</CardTitle>
+          <CardTitle>{t('currentExchangeRates')}</CardTitle>
           <CardDescription>
-            All rates are relative to {currency} (1 {currency} = X currency)
+            {t('allRatesRelativeTo', { currency })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -231,14 +235,14 @@ export function ExchangeRateManager() {
 
           {Object.keys(exchangeRates).length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No exchange rates available</p>
+              <p>{t('noExchangeRatesAvailable')}</p>
               <Button
                 onClick={fetchExchangeRates}
                 variant="outline"
                 size="sm"
                 className="mt-2"
               >
-                Load Rates
+                {t('loadRates')}
               </Button>
             </div>
           )}
