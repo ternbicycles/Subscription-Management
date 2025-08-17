@@ -72,20 +72,20 @@ export class ExchangeRateApi {
   /**
    * 将汇率数组转换为汇率映射对象
    */
-  static ratesToMap(rates: ExchangeRate[]): Record<string, number> {
+  static ratesToMap(rates: ExchangeRate[], baseCurrency?: string): Record<string, number> {
     const rateMap: Record<string, number> = {};
-    const baseCurrency = getBaseCurrency();
+    const base = baseCurrency || getBaseCurrency();
 
     for (const rate of rates) {
       // 使用 from_currency 作为键，rate 作为值
       // 这样可以直接查找从基础货币到其他货币的汇率
-      if (rate.from_currency === baseCurrency) {
+      if (rate.from_currency === base) {
         rateMap[rate.to_currency] = rate.rate;
       }
     }
 
     // 确保基础货币到自身的汇率为 1
-    rateMap[baseCurrency] = 1;
+    rateMap[base] = 1;
 
     return rateMap;
   }

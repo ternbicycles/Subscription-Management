@@ -91,6 +91,8 @@ export const useSettingsStore = create<SettingsState>()(
         // Sync to backend
         try {
           await apiClient.put('/protected/settings', { currency })
+          // Refetch exchange rates with the new base currency
+          await get().fetchExchangeRates()
         } catch (error: any) {
           logger.error('Error saving currency setting:', error)
           // Could optionally revert the local change here
@@ -135,7 +137,8 @@ export const useSettingsStore = create<SettingsState>()(
       fetchExchangeRates: async () => {
         try {
           const rates = await ExchangeRateApi.getAllRates();
-          const rateMap = ExchangeRateApi.ratesToMap(rates);
+          const { currency } = get();
+          const rateMap = ExchangeRateApi.ratesToMap(rates, currency);
 
           set({
             exchangeRates: rateMap,

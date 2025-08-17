@@ -124,6 +124,26 @@ class ExchangeRateScheduler {
 
         const transaction = this.db.transaction((rates) => {
             let count = 0;
+            
+            // First, clean up old rates from different base currencies
+            if (rates.length > 0) {
+                const currentBaseCurrency = rates[0].from_currency;
+                const deleteOldRates = this.db.prepare(`
+                    DELETE FROM exchange_rates 
+                    WHERE from_currency != ? AND from_currency != to_currency
+                `);
+                
+                try {
+                    const deletedCount = deleteOldRates.run(currentBaseCurrency).changes;
+                    if (deletedCount > 0) {
+                        logger.info(`Cleaned up ${deletedCount} old exchange rates from different base currencies`);
+                    }
+                } catch (error) {
+                    logger.error('Failed to clean up old exchange rates:', error.message);
+                }
+            }
+            
+            // Then insert/update the new rates
             for (const rate of rates) {
                 try {
                     upsertRate.run(rate.from_currency, rate.to_currency, rate.rate);
@@ -147,6 +167,33 @@ class ExchangeRateScheduler {
             nextRun: this.task ? this.task.nextDate() : null,
             hasApiKey: !!this.exchangeRateService.apiKey
         };
+    }
+
+    /**
+     * 清理数据库中的冗余汇率数据
+     * 删除不是当前基础货币的旧汇率记录
+     * @param {string} currentBaseCurrency - 当前基础货币
+     * @returns {number} 删除的记录数
+     */
+    cleanupRedundantRates(currentBaseCurrency) {
+        try {
+            const deleteOldRates = this.db.prepare(`
+                DELETE FROM exchange_rates 
+                WHERE from_currency != ? AND from_currency != to_currency
+            `);
+            
+            const result = deleteOldRates.run(currentBaseCurrency);
+            const deletedCount = result.changes;
+            
+            if (deletedCount > 0) {
+                logger.info(`Cleaned up ${deletedCount} redundant exchange rates from old base currencies`);
+            }
+            
+            return deletedCount;
+        } catch (error) {
+            logger.error('Failed to clean up redundant exchange rates:', error.message);
+            throw error;
+        }
     }
 }
 

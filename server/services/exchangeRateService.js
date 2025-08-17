@@ -4,12 +4,12 @@ const { SUPPORTED_CURRENCY_CODES, getBaseCurrency } = require('../config/currenc
 
 /**
  * 汇率API服务
- * 使用天行数据API获取实时汇率
+ * 使用Twelve Data API获取实时汇率
  */
 class ExchangeRateApiService {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseUrl = 'https://apis.tianapi.com/fxrate/index';
+        this.baseUrl = 'https://api.twelvedata.com/exchange_rate';
         this.supportedCurrencies = SUPPORTED_CURRENCY_CODES;
     }
 
@@ -17,12 +17,11 @@ class ExchangeRateApiService {
      * 获取单个汇率
      * @param {string} fromCurrency - 源货币
      * @param {string} toCurrency - 目标货币
-     * @param {number} amount - 金额，默认为1
      * @returns {Promise<number>} 汇率值
      */
-    async getExchangeRate(fromCurrency, toCurrency, amount = 1) {
+    async getExchangeRate(fromCurrency, toCurrency) {
         if (!this.apiKey) {
-            throw new Error('TIANAPI_KEY not configured');
+            throw new Error('Twelve Data API key not configured');
         }
 
         if (fromCurrency === toCurrency) {
@@ -30,25 +29,30 @@ class ExchangeRateApiService {
         }
 
         try {
+            const symbol = `${fromCurrency}/${toCurrency}`;
+            logger.info(`Fetching exchange rate for ${symbol} from Twelve Data API.`);
+            
             const response = await axios.get(this.baseUrl, {
                 params: {
-                    key: this.apiKey,
-                    fromcoin: fromCurrency,
-                    tocoin: toCurrency,
-                    money: amount
+                    symbol: symbol,
+                    apikey: this.apiKey,
                 },
                 timeout: 10000 // 10秒超时
             });
 
-            if (response.data.code === 200) {
-                const rate = parseFloat(response.data.result.money) / amount;
+            logger.info('Twelve Data API Response:', response.data);
+
+            if (response.data && response.data.rate) {
+                const rate = parseFloat(response.data.rate);
+                logger.info(`Exchange rate for ${fromCurrency} to ${toCurrency}:`, rate);
                 return rate;
             } else {
-                throw new Error(`API Error: ${response.data.msg} (Code: ${response.data.code})`);
+                throw new Error(`API Error: Invalid response for ${symbol}: ${JSON.stringify(response.data)}`);
             }
         } catch (error) {
+            logger.error('Full error object:', error);
             if (error.response) {
-                throw new Error(`API Request Failed: ${error.response.status} - ${error.response.data?.msg || error.message}`);
+                throw new Error(`API Request Failed: ${error.response.status} - ${error.response.data?.message || error.message}`);
             } else if (error.request) {
                 throw new Error('Network Error: Unable to reach exchange rate API');
             } else {
@@ -63,10 +67,11 @@ class ExchangeRateApiService {
      */
     async getAllExchangeRates() {
         if (!this.apiKey) {
-            logger.warn('TIANAPI_KEY not configured, skipping exchange rate update');
+            logger.warn('Twelve Data API key is missing. Skipping exchange rate update.');
             return [];
         }
 
+        logger.info('Fetching all exchange rates from Twelve Data API.');
         const rates = [];
         const baseCurrency = getBaseCurrency();
 
@@ -90,8 +95,9 @@ class ExchangeRateApiService {
                     rate: rate
                 });
 
-                // 添加延迟以避免API限制
-                await this.delay(500); // 500ms延迟
+                // The free plan of Twelve Data has a rate limit of 8 requests per minute.
+                // Add a delay to avoid hitting the rate limit.
+                await this.delay(8000); // 8 seconds delay
             } catch (error) {
                 logger.error(`Failed to fetch rate for ${baseCurrency} -> ${currency}:`, error.message);
                 // 继续处理其他货币，不中断整个过程
@@ -120,6 +126,7 @@ class ExchangeRateApiService {
 
         try {
             await this.getExchangeRate(getBaseCurrency(), 'USD');
+            console.log('API Key is valid');
             return true;
         } catch (error) {
             console.error('API Key validation failed:', error.message);

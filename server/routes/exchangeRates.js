@@ -57,6 +57,26 @@ function createProtectedExchangeRateRoutes(db, exchangeRateScheduler) {
         }
     });
 
+    // POST to cleanup redundant exchange rates (Protected)
+    router.post('/cleanup', async (req, res) => {
+        try {
+            const { baseCurrency } = req.body;
+            
+            if (!baseCurrency) {
+                return res.status(400).json({ error: 'baseCurrency is required' });
+            }
+            
+            const deletedCount = exchangeRateScheduler.cleanupRedundantRates(baseCurrency);
+            
+            res.json({
+                message: `Cleaned up ${deletedCount} redundant exchange rates`,
+                deletedCount
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     // GET exchange rate scheduler status (Protected)
     router.get('/status', (req, res) => {
         try {

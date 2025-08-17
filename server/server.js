@@ -33,7 +33,7 @@ app.use(express.json());
 const db = initializeDatabase();
 
 // Initialize exchange rate scheduler
-const exchangeRateScheduler = new ExchangeRateScheduler(db, process.env.TIANAPI_KEY);
+const exchangeRateScheduler = new ExchangeRateScheduler(db, process.env.TWELVE_DATA_API_KEY);
 exchangeRateScheduler.start();
 
 // Initialize subscription maintenance scheduler
