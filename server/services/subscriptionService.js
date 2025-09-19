@@ -297,14 +297,14 @@ class SubscriptionService extends BaseRepository {
         const keyFields = ['amount', 'billing_cycle', 'start_date', 'status'];
         const hasKeyFieldUpdate = keyFields.some(field => updateData.hasOwnProperty(field));
         
-        if (hasKeyFieldUpdate) {
-            try {
-                await this.regeneratePaymentHistory(id);
-                logger.info(`Payment history regenerated for subscription ${id}`);
-            } catch (error) {
-                logger.error(`Failed to regenerate payment history for subscription ${id}:`, error.message);
-            }
-        }
+        // if (hasKeyFieldUpdate) {
+        //     try {
+        //         await this.regeneratePaymentHistory(id);
+        //         logger.info(`Payment history regenerated for subscription ${id}`);
+        //     } catch (error) {
+        //         logger.error(`Failed to regenerate payment history for subscription ${id}:`, error.message);
+        //     }
+        // }
 
         // 发送订阅变更通知（异步触发，不阻塞请求）
         this.notificationService
