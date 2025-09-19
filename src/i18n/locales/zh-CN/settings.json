@@ -111,6 +111,7 @@
   "australianDollar": "澳元",
   "japaneseYen": "日元",
   "turkishLira": "土耳其里拉",
+  "hongKongDollar": "港元",
   "importSubscriptions": "导入订阅",
   "uploadCsvOrJson": "上传CSV或JSON文件以一次导入多个订阅。",
   "selectFile": "选择文件",

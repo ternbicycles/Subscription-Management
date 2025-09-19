@@ -12,8 +12,10 @@ if [ ! -d "/app/data" ]; then
     mkdir -p /app/data
 fi
 
-# Set database path environment variable
-export DATABASE_PATH="/app/data/database.sqlite"
+# Respect existing DATABASE_PATH if provided; otherwise set default path
+if [ -z "$DATABASE_PATH" ]; then
+    export DATABASE_PATH="/app/data/database.sqlite"
+fi
 
 # Database initialization and migration
 if [ ! -f "$DATABASE_PATH" ]; then
