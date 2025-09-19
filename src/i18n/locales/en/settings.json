@@ -111,6 +111,7 @@
   "australianDollar": "Australian Dollar",
   "japaneseYen": "Japanese Yen",
   "turkishLira": "Turkish Lira",
+  "hongKongDollar": "Hong Kong Dollar",
   "importSubscriptions": "Import Subscriptions",
   "uploadCsvOrJson": "Upload a CSV or JSON file to import multiple subscriptions at once.",
   "selectFile": "Select file",

@@ -50,7 +50,7 @@ A modern subscription management system that helps users easily manage and track
 
 ### Advanced Features
 - ✅ **Automatic Renewal Processing** - Smart detection of expiring subscriptions with automatic updates
-- ✅ **Multi-currency Support** - Real-time conversion for 8 major currencies (USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY)
+- ✅ **Multi-currency Support** - Real-time conversion for 9 major currencies (USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY, HKD)
 - ✅ **Automatic Exchange Rate Updates** - Integrated with Tianapi for daily exchange rate updates
 - ✅ **Expense Report Dashboard** - Comprehensive expense analysis and visualization
 - ✅ **Payment History Tracking** - Complete payment records and historical analysis
@@ -186,7 +186,7 @@ API_KEY=your_secret_api_key_here
 PORT=3001
 
 # Base currency (optional, default CNY)
-# Supported: USD, EUR, GBP, CNY, JPY, CAD, AUD, TRY
+# Supported: USD, EUR, GBP, CNY, JPY, CAD, AUD, TRY, HKD
 BASE_CURRENCY=CNY
 
 # Database path (used for Docker deployment)

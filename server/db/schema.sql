@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     plan TEXT NOT NULL,
-    billing_cycle TEXT NOT NULL CHECK (billing_cycle IN ('monthly', 'yearly', 'quarterly')),
+    billing_cycle TEXT NOT NULL CHECK (billing_cycle IN ('monthly', 'yearly', 'quarterly', 'semiannual')),
     next_billing_date DATE,
     last_billing_date DATE,
     amount DECIMAL(10, 2) NOT NULL,
@@ -215,7 +215,7 @@ INSERT OR IGNORE INTO payment_methods (value, label) VALUES
 
 -- Insert default exchange rates (Base currency from application config)
 -- Note: These rates should match BASE_CURRENCY configuration
--- Only supported currencies: USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY
+-- Only supported currencies: USD, EUR, GBP, CAD, AUD, JPY, CNY, TRY, HKD
 INSERT OR IGNORE INTO exchange_rates (from_currency, to_currency, rate) VALUES
 ('CNY', 'CNY', 1.0000),
 ('CNY', 'USD', 0.1538),
@@ -224,4 +224,5 @@ INSERT OR IGNORE INTO exchange_rates (from_currency, to_currency, rate) VALUES
 ('CNY', 'JPY', 16.9231),
 ('CNY', 'CAD', 0.1923),
 ('CNY', 'AUD', 0.2077),
-('CNY', 'TRY', 4.2000);
+('CNY', 'TRY', 4.2000),
+('CNY', 'HKD', 1.1923);
